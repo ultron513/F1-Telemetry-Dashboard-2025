@@ -1,0 +1,99 @@
+name: Publish F1 data
+
+# Pre-computes every chart's data for every session with the backend code and
+# publishes it to a Hugging Face dataset that the website reads directly.
+# Runs every Monday (after race weekends) and on demand. Each season runs in
+# parallel; long first runs stop cleanly before the 6-hour job limit and the
+# next run continues where they left off.
+#
+# Repository settings (Settings → Secrets and variables → Actions):
+#   secret   HF_TOKEN    – Hugging Face access token with "Write" permission
+#   variable HF_DATASET  – e.g. "your-hf-username/pitwall-data" (created automatically)
+
+on:
+  schedule:
+    - cron: "23 5 * * 1"
+  workflow_dispatch:
+    inputs:
+      seasons:
+        description: "Seasons to export (space separated)"
+        default: "2023 2024 2025 2026"
+      force:
+        description: "Re-export sessions that are already published"
+        type: boolean
+        default: false
+
+concurrency:
+  group: publish-data
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    if: ${{ vars.HF_DATASET != '' }}
+    outputs:
+      seasons: ${{ steps.seasons.outputs.list }}
+    steps:
+      - id: seasons
+        run: |
+          raw="${{ github.event.inputs.seasons }}"
+          # Scheduled runs only need the current and previous season.
+          [ -z "$raw" ] && raw="$(( $(date +%Y) - 1 )) $(date +%Y)"
+          echo "list=$(echo $raw | python3 -c 'import json,sys; print(json.dumps([int(s) for s in sys.stdin.read().split() if 2018 <= int(s) <= 2100]))')" >> "$GITHUB_OUTPUT"
+
+  export:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    strategy:
+      fail-fast: false
+      matrix:
+        season: ${{ fromJson(needs.plan.outputs.seasons) }}
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HF_DATASET: ${{ vars.HF_DATASET }}
+      F1_CACHE_DIR: ${{ runner.temp }}/fastf1-cache
+      F1_SEASONS: "2023,2024,2025,2026"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Free disk space
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r backend/requirements.txt huggingface_hub
+      - name: Export season ${{ matrix.season }}
+        working-directory: backend
+        run: >
+          python scripts/export_static.py
+          --seasons ${{ matrix.season }}
+          --out "${{ runner.temp }}/data-out"
+          --upload
+          --time-budget 320
+          ${{ github.event.inputs.force == 'true' && '--force' || '' }}
+
+  meta:
+    needs: [plan, export]
+    if: ${{ always() && needs.plan.result == 'success' }}
+    runs-on: ubuntu-latest
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HF_DATASET: ${{ vars.HF_DATASET }}
+      F1_SEASONS: "2023,2024,2025,2026"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: pip install -r backend/requirements.txt huggingface_hub
+      - name: Publish season list
+        working-directory: backend
+        run: python scripts/export_static.py --meta --out "${{ runner.temp }}/data-out" --upload
+      - name: Summary
+        run: |
+          echo "Data URL for Vercel (NEXT_PUBLIC_DATA_URL):" >> "$GITHUB_STEP_SUMMARY"
+          echo "https://huggingface.co/datasets/${{ vars.HF_DATASET }}/resolve/main/v1" >> "$GITHUB_STEP_SUMMARY"

@@ -1,5 +1,5 @@
 /* Pit Wall service worker: app-shell + data caching for fast repeat visits and offline viewing. */
-const VERSION = "pitwall-v1";
+const VERSION = "pitwall-v2";
 const STATIC_CACHE = `${VERSION}-static`;
 const PAGE_CACHE = `${VERSION}-pages`;
 const DATA_CACHE = `${VERSION}-data`;
@@ -78,6 +78,12 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
   const url = new URL(request.url);
+
+  // Published session data (static-data mode) lives on Hugging Face.
+  if (url.hostname === "huggingface.co" && url.pathname.includes("/resolve/")) {
+    event.respondWith(staleWhileRevalidate(request, event));
+    return;
+  }
   if (url.origin !== self.location.origin) return;
 
   if (request.mode === "navigate") {

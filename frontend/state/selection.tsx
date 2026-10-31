@@ -46,11 +46,20 @@ interface SelectionCtx {
 const SelectionContext = createContext<SelectionCtx | null>(null);
 const STORAGE_KEY = "pitwall.selection.v1";
 
+/** A session can be opened if it has happened and (in static-data mode) has been published. */
+export function sessionOpenable(s: { start_utc: string | null; available?: boolean }) {
+  if (s.available === false) return false;
+  return !s.start_utc || new Date(s.start_utc).getTime() < Date.now();
+}
+
+export function eventOpenable(e: Event) {
+  return e.status !== "upcoming" && e.sessions.some(sessionOpenable);
+}
+
 function pickSession(event: Event | null, wanted: string | null): SessionCode | null {
   if (!event) return null;
-  const now = Date.now();
-  const past = event.sessions.filter((s) => !s.start_utc || new Date(s.start_utc).getTime() < now);
-  if (wanted && event.sessions.some((s) => s.code === wanted)) return wanted as SessionCode;
+  const past = event.sessions.filter(sessionOpenable);
+  if (wanted && past.some((s) => s.code === wanted)) return wanted as SessionCode;
   const race = past.find((s) => s.code === "R");
   if (race) return "R";
   const last = past[past.length - 1] ?? event.sessions[event.sessions.length - 1];
@@ -74,8 +83,10 @@ export function SelectionProvider({ children }: { children: React.ReactNode }) {
   const eventsQuery = useEvents(season);
   const events = useMemo(() => eventsQuery.data?.events ?? [], [eventsQuery.data]);
   const rawRound = Number(params.get("round")) || null;
+  const latestOpenable = [...events].reverse().find(eventOpenable) ?? null;
   const event =
     events.find((e) => e.round === rawRound) ??
+    latestOpenable ??
     eventsQuery.data?.last_completed ??
     events[0] ??
     null;

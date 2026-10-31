@@ -9,6 +9,8 @@ export interface SessionSlot {
   name: string;
   kind: SessionKind;
   start_utc: string | null;
+  /** Static-data mode: whether this session has been published. */
+  available?: boolean;
 }
 
 export interface Event {

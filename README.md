@@ -35,7 +35,7 @@ Every session from 2023 to 2026 · built on FastF1, FastAPI and Next.js · re-th
 | **Shareable** | Season, round, session, drivers and laps live in the URL — every view can be bookmarked |
 | **Themes** | 15 team themes (2023–2026 constructors) · dark and light mode · km/h or mph · °C or °F |
 | **App** | Installable on Android, iPhone, Windows and Mac straight from the browser — opens in its own window and keeps viewed sessions available offline |
-| **Fast** | Finished sessions are cached on Vercel's global CDN for 30 days; loaded sessions stay in memory on the API; the latest races are pre-loaded at startup |
+| **Fast** | Every session is pre-computed and served from global CDNs; the installed app also caches what you've viewed |
 
 ---
 
@@ -176,7 +176,7 @@ flowchart LR
     U -->|"/api/f1/…"| PX["Vercel proxy<br/>+ CDN cache"]
     SW[["Service worker<br/>offline cache"]] -.-> U
     PX -->|"cache miss"| A["FastAPI /api/v1"]
-    subgraph API ["Pit Wall API (Docker · Hugging Face Space)"]
+    subgraph API ["Pit Wall API (local or any Docker host)"]
         A --> P["Payload memo<br/>LRU + TTL"]
         P --> S["Session store<br/>loaded sessions in RAM"]
         S --> F["FastF1"]
@@ -188,6 +188,9 @@ flowchart LR
     ST --> J["Jolpica (Ergast) API"]
     ST -. "fallback" .-> S
 ```
+
+> [!TIP]
+> The **public deployment** runs the same API code ahead of time instead (see [Deploy](#-deploy)): GitHub Actions calls every endpoint for every session and publishes the responses as files, so the live site needs no server at all.
 
 <details>
 <summary><b>What happens on a request</b></summary>
@@ -457,21 +460,23 @@ GitHub Actions runs all of these on every push and pull request.
 
 ## 🚀 Deploy
 
-**Website on Vercel + data API on a free Hugging Face Space** — click-by-click instructions in **[docs/DEPLOY.md](docs/DEPLOY.md)**.
+**Free, no card anywhere** — click-by-click guide in **[docs/DEPLOY.md](docs/DEPLOY.md)**.
+
+The public app doesn't run a server. GitHub Actions runs the backend code over every session from 2023 to 2026 and publishes the results as JSON files to a Hugging Face Dataset; the website on Vercel reads them straight from the CDN.
 
 ```mermaid
 flowchart LR
-    GH["GitHub main"] -->|"auto deploy"| V["Vercel<br/>frontend/"]
-    GH -->|"Deploy API workflow"| H["Hugging Face Space<br/>backend/ (Docker, 16 GB RAM)"]
-    V -->|"PITWALL_API_ORIGIN"| H
-    K["Keep API warm<br/>(twice a day)"] -.-> V
+    GA["GitHub Actions<br/>Publish F1 data<br/>(Mondays + on demand)"] -->|"FastF1 + backend code"| D[("Hugging Face Dataset<br/>pre-computed JSON")]
+    U([Browser or installed app]) --> V["Vercel · Next.js"]
+    U -->|"session data"| D
+    GH["GitHub main"] -->|"auto deploy"| V
 ```
 
-1. Create a Docker Space on Hugging Face, add `HF_TOKEN` (secret) and `HF_SPACE` (variable) to this repo, run **Actions → Deploy API to Hugging Face**.
-2. Import the repo on Vercel with **Root Directory** `frontend` and `PITWALL_API_ORIGIN=https://<user>-pitwall-api.hf.space`.
-3. Optionally set the `SITE_URL` variable so the **Keep API warm** workflow stops the free Space from sleeping.
+1. Add a Hugging Face **Write** token as the `HF_TOKEN` secret and `HF_DATASET=<user>/pitwall-data` as a variable.
+2. Run **Actions → Publish F1 data** (run it again if a season didn't finish within GitHub's 6-hour job limit — it resumes).
+3. Import the repo on Vercel with **Root Directory** `frontend` and `NEXT_PUBLIC_DATA_URL=https://huggingface.co/datasets/<user>/pitwall-data/resolve/main/v1`.
 
-Prefer a paid always-on API? `render.yaml` is a ready Render Blueprint, and `docker compose up -d --build` runs everything on any server.
+In this mode telemetry is published for each driver's fastest lap; two-driver comparisons are computed in the browser. To serve any lap live, deploy the API instead (`render.yaml`, or the Hugging Face Space workflow on PRO) and set `PITWALL_API_ORIGIN`.
 
 <details>
 <summary><b>Environment variables</b></summary>
@@ -496,7 +501,8 @@ Prefer a paid always-on API? `render.yaml` is a ready Render Blueprint, and `doc
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
-| `PITWALL_API_ORIGIN` | `http://127.0.0.1:8000` | Where the `/api/f1` proxy forwards requests (server-side) |
+| `NEXT_PUBLIC_DATA_URL` | unset | Static-data mode: base URL of the published JSON files (what the public deployment uses) |
+| `PITWALL_API_ORIGIN` | `http://127.0.0.1:8000` | API mode: where the `/api/f1` proxy forwards requests (server-side) |
 | `NEXT_PUBLIC_API_URL` | unset | Optional: call an API directly from the browser instead of through the proxy |
 
 </details>
@@ -520,6 +526,7 @@ Prefer a paid always-on API? `render.yaml` is a ready Render Blueprint, and `doc
 │   │   ├── schemas/             Pydantic response models
 │   │   ├── api/                 v1 routers, request deps, memoised payload layer
 │   │   └── main.py              app factory (CORS, gzip, error handlers)
+│   ├── scripts/export_static.py renders every API response to static JSON for publishing
 │   ├── tests/                   pytest suite (offline, against ../cache)
 │   └── Dockerfile
 ├── frontend/                    Next.js 16 · Tailwind 4 · TanStack Query
@@ -566,7 +573,8 @@ Drivers without a photo get a generated card in their team's colours with their 
 - [x] Team theming for every 2023–2026 constructor, dark/light mode
 - [x] Docker, Render and Vercel configs, CI
 - [x] Installable app (PWA) with offline caching
-- [x] CDN-cached API proxy, startup warm-up and one-click Hugging Face deploy
+- [x] CDN-cached API proxy and startup warm-up for server deployments
+- [x] Free static deployment: weekly GitHub Actions export to a Hugging Face Dataset
 - [ ] Qualifying knockout view (Q1/Q2/Q3 cut-off lines)
 - [ ] More than two drivers on the telemetry overlay
 - [ ] Season-long driver form pages

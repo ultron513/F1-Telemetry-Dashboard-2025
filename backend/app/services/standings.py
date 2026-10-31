@@ -29,6 +29,7 @@ def _get(path: str, **params: Any) -> dict[str, Any]:
     return resp.json()["MRData"]
 
 
+@memoize(maxsize=16, ttl=3600)
 def _paged_races(path: str) -> list[dict[str, Any]]:
     races: dict[str, dict[str, Any]] = {}
     offset, limit = 0, 100

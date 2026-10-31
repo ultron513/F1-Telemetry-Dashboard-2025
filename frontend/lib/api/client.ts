@@ -1,25 +1,16 @@
 // Thin fetch wrapper: one base URL, typed JSON, structured errors.
 
+import { ApiError } from "./errors";
+import { DATA_URL, STATIC_MODE, staticGet } from "./static";
+
 /**
  * By default the browser calls this site's own `/api/f1` proxy (CDN-cached on
  * Vercel). Set NEXT_PUBLIC_API_URL to call a backend directly instead.
  */
 const DIRECT = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
-export const API_BASE_URL = DIRECT ? `${DIRECT}/api/v1` : "/api/f1";
+export const API_BASE_URL = STATIC_MODE ? DATA_URL : DIRECT ? `${DIRECT}/api/v1` : "/api/f1";
 
-export class ApiError extends Error {
-  status: number;
-  code: string;
-  hint: string | null;
-
-  constructor(status: number, code: string, message: string, hint: string | null = null) {
-    super(message);
-    this.name = "ApiError";
-    this.status = status;
-    this.code = code;
-    this.hint = hint;
-  }
-}
+export { ApiError };
 
 type Params = Record<string, string | number | boolean | null | undefined>;
 
@@ -40,6 +31,7 @@ export function isTransient(error: unknown): boolean {
 }
 
 export async function apiGet<T>(path: string, params?: Params, signal?: AbortSignal): Promise<T> {
+  if (STATIC_MODE) return staticGet<T>(path, params, signal);
   let response: Response;
   try {
     response = await fetch(buildUrl(path, params), {
