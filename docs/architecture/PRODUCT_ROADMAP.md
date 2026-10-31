@@ -1,150 +1,21 @@
 # PRODUCT ROADMAP
 
-## Phase 1
-Backend Platform
-
-✅ Data Loading
-
-✅ Session Loading
-
-✅ Telemetry
-
-✅ Drivers
-
-✅ Laps
-
----
-
-## Phase 2
-
-Telemetry Analytics
-
-Speed
-
-Throttle
-
-Brake
-
-Gear
-
-RPM
-
-DRS
-
-Acceleration
-
-Braking
-
-Corner Analysis
-
-Telemetry Comparison
-
----
-
-## Phase 3
-
-Race Analytics
-
-Tyre Strategy
-
-Pit Stops
-
-Stints
-
-Race Pace
-
-Qualifying Pace
-
-Overtakes
-
-Position Changes
-
----
-
-## Phase 4
-
-Championship Analytics
-
-Driver Standings
-
-Constructor Standings
-
-Points Progression
-
-Podiums
-
-Wins
-
-Pole Positions
-
-Fastest Laps
-
----
-
-## Phase 5
-
-Circuit Analytics
-
-Interactive Track
-
-Corner Database
-
-Sector Analysis
-
-Mini Sectors
-
-Speed Traps
-
----
-
-## Phase 6
-
-Weather Analytics
-
-Track Temperature
-
-Air Temperature
-
-Humidity
-
-Wind
-
-Rain
-
-Pressure
-
----
-
-## Phase 7
-
-Dashboard
-
-Homepage
-
-Driver Page
-
-Team Page
-
-Telemetry Page
-
-Race Page
-
-Strategy Page
-
-Weather Page
-
-Settings
-
----
-
-## Phase 8
-
-Deployment
-
-Production
-
-Optimization
-
-Vercel
-
-Monitoring
+Status as of the v2 rebuild.
+
+## Done
+
+- **Backend platform** — multi-season FastAPI service, in-memory session store, memoised payloads, structured errors, tests, Docker image
+- **Telemetry analytics** — speed, throttle, brake, gear, RPM, DRS, braking zones, corner apex speeds, lap overlay with delta, mini-sector dominance
+- **Race analytics** — tyre strategy, pit-lane times, measured pit loss, fuel-corrected degradation, stint review model, race trace, position changes
+- **Championship analytics** — driver and constructor standings, wins, podiums, points progression (Jolpica, with a FastF1 fallback)
+- **Circuit analytics** — interactive map (speed / gear / pedals / dominance / DRS zones), corners, sectors
+- **Weather analytics** — temperatures, humidity, wind, pressure, rain periods, wind rose
+- **Dashboard** — overview, telemetry, laps, track map, strategy, head to head, race control (replay + log), weather, standings, drivers, settings; team theming; notifications
+- **Deployment** — Vercel (web) + Render/Docker (API) configs, CI workflow
+
+## Next ideas
+
+- Qualifying segment view (Q1/Q2/Q3 knockouts with cut-off lines)
+- Multi-lap telemetry overlays (more than two drivers)
+- Season-wide driver profile pages (form across rounds)
+- Live session mode via FastF1's live-timing client
