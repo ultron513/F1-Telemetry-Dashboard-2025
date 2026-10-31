@@ -21,6 +21,16 @@ export const metadata: Metadata = {
   description:
     "Interactive Formula 1 telemetry, strategy and race-control analysis for every session from 2023 to 2026, built on FastF1.",
   applicationName: "Pit Wall",
+  appleWebApp: {
+    capable: true,
+    title: "Pit Wall",
+    statusBarStyle: "black",
+  },
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {

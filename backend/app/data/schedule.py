@@ -174,3 +174,17 @@ def is_session_in_future(ref: SessionRef) -> bool:
     if start is None or is_missing(start):
         return False
     return pd.Timestamp(now_utc()) < start
+
+
+@memoize(maxsize=1, ttl=3600)
+def current_season() -> int:
+    """Newest supported season with at least one completed event."""
+    if settings.default_season_pinned:
+        return settings.default_season
+    for season in sorted(settings.seasons, reverse=True):
+        try:
+            if any(e["status"] == "completed" for e in list_events(season)):
+                return season
+        except Exception:
+            continue
+    return settings.default_season

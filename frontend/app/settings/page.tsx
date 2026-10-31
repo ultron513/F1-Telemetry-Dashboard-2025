@@ -11,6 +11,8 @@ import { useHealth } from "@/lib/api/queries";
 import type { Severity } from "@/lib/api/types";
 import { TEAM_THEMES, liveryGradient, type TeamKey } from "@/lib/teams";
 import { cn } from "@/lib/utils";
+import { InstallButton } from "@/components/shell/pwa";
+import { isIos, useInstall } from "@/state/install";
 import { clearNotices, pushNotice } from "@/state/notifications";
 import { usePreferences } from "@/state/preferences";
 
@@ -132,6 +134,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="space-y-4">
+          <InstallPanel />
           <Panel title="Data connection">
             <dl className="space-y-3 text-[13.5px]">
               <div>
@@ -166,5 +169,35 @@ export default function SettingsPage() {
         </div>
       </div>
     </>
+  );
+}
+
+function InstallPanel() {
+  const { prompt, installed } = useInstall();
+  return (
+    <Panel title="Install as an app" subtitle="Opens in its own window from your home screen or desktop, and keeps sessions you've viewed available offline.">
+      {installed ? (
+        <p className="text-[13.5px] font-semibold text-good">Installed — you&rsquo;re using the app.</p>
+      ) : prompt ? (
+        <InstallButton className="inline-flex h-9 items-center gap-1.5 rounded-md bg-team px-3.5 text-[13.5px] font-semibold text-on-team hover:brightness-110" />
+      ) : (
+        <ul className="space-y-2 text-[13px] text-ink-2">
+          {isIos() ? (
+            <li>
+              <span className="font-semibold text-ink">iPhone / iPad:</span> tap the Share button in Safari, then <span className="font-semibold text-ink">Add to Home Screen</span>.
+            </li>
+          ) : (
+            <>
+              <li>
+                <span className="font-semibold text-ink">Chrome / Edge (Windows, Mac, Android):</span> use the install icon in the address bar, or the browser menu → <span className="font-semibold text-ink">Install Pit Wall</span>.
+              </li>
+              <li>
+                <span className="font-semibold text-ink">iPhone / iPad:</span> open in Safari, tap Share → <span className="font-semibold text-ink">Add to Home Screen</span>.
+              </li>
+            </>
+          )}
+        </ul>
+      )}
+    </Panel>
   );
 }

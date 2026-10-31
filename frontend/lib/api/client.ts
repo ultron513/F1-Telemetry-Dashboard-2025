@@ -1,8 +1,11 @@
 // Thin fetch wrapper: one base URL, typed JSON, structured errors.
 
-export const API_BASE_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000"
-).replace(/\/$/, "");
+/**
+ * By default the browser calls this site's own `/api/f1` proxy (CDN-cached on
+ * Vercel). Set NEXT_PUBLIC_API_URL to call a backend directly instead.
+ */
+const DIRECT = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+export const API_BASE_URL = DIRECT ? `${DIRECT}/api/v1` : "/api/f1";
 
 export class ApiError extends Error {
   status: number;
@@ -21,15 +24,19 @@ export class ApiError extends Error {
 type Params = Record<string, string | number | boolean | null | undefined>;
 
 export function buildUrl(path: string, params?: Params): string {
-  const url = new URL(`${API_BASE_URL}/api/v1${path}`);
+  const search = new URLSearchParams();
   if (params) {
     for (const [key, value] of Object.entries(params)) {
-      if (value !== undefined && value !== null && value !== "") {
-        url.searchParams.set(key, String(value));
-      }
+      if (value !== undefined && value !== null && value !== "") search.set(key, String(value));
     }
   }
-  return url.toString();
+  const qs = search.toString();
+  return `${API_BASE_URL}${path}${qs ? `?${qs}` : ""}`;
+}
+
+/** Errors worth retrying: the API is asleep, restarting or still downloading a session. */
+export function isTransient(error: unknown): boolean {
+  return error instanceof ApiError && [0, 502, 503, 504].includes(error.status) && error.code !== "data_unavailable";
 }
 
 export async function apiGet<T>(path: string, params?: Params, signal?: AbortSignal): Promise<T> {
@@ -45,7 +52,9 @@ export async function apiGet<T>(path: string, params?: Params, signal?: AbortSig
       0,
       "network",
       "Can't reach the telemetry API.",
-      `Check that the backend is running at ${API_BASE_URL}.`,
+      typeof navigator !== "undefined" && !navigator.onLine
+        ? "You're offline. Sessions you've already opened still work."
+        : "Check your connection or try again in a moment.",
     );
   }
 

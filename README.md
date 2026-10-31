@@ -34,6 +34,8 @@ Every session from 2023 to 2026 · built on FastF1, FastAPI and Next.js · re-th
 | **Live feel** | A session replay with every car on the map, a timing tower, Safety Car / VSC / red-flag banners and race-control messages arriving as notifications |
 | **Shareable** | Season, round, session, drivers and laps live in the URL — every view can be bookmarked |
 | **Themes** | 15 team themes (2023–2026 constructors) · dark and light mode · km/h or mph · °C or °F |
+| **App** | Installable on Android, iPhone, Windows and Mac straight from the browser — opens in its own window and keeps viewed sessions available offline |
+| **Fast** | Finished sessions are cached on Vercel's global CDN for 30 days; loaded sessions stay in memory on the API; the latest races are pre-loaded at startup |
 
 ---
 
@@ -170,15 +172,18 @@ Units, dark/light mode, team theming (follow the focused driver, lock to one tea
 
 ```mermaid
 flowchart LR
-    U([Browser]) -->|"static pages"| W["Next.js 16<br/>(Vercel)"]
-    U -->|"JSON over HTTPS"| A["FastAPI<br/>/api/v1"]
-    subgraph API ["Pit Wall API (Docker)"]
+    U([Browser or installed app]) -->|"pages"| W["Next.js on Vercel"]
+    U -->|"/api/f1/…"| PX["Vercel proxy<br/>+ CDN cache"]
+    SW[["Service worker<br/>offline cache"]] -.-> U
+    PX -->|"cache miss"| A["FastAPI /api/v1"]
+    subgraph API ["Pit Wall API (Docker · Hugging Face Space)"]
         A --> P["Payload memo<br/>LRU + TTL"]
         P --> S["Session store<br/>loaded sessions in RAM"]
         S --> F["FastF1"]
         A --> ST["Standings service"]
+        WU["Startup warm-up"] -.-> S
     end
-    F <-->|"pickles"| C[("Disk cache<br/>/data/fastf1-cache")]
+    F <-->|"pickles"| C[("Disk cache")]
     F -->|"first load only"| LT["F1 live-timing archive"]
     ST --> J["Jolpica (Ergast) API"]
     ST -. "fallback" .-> S
@@ -216,7 +221,8 @@ sequenceDiagram
 
 - Each session is loaded **once** and shared by every endpoint; concurrent requests for the same session wait on one lock instead of loading it twice.
 - Derived payloads are memoised per argument tuple, so revisiting any view is instant.
-- Errors come back as `{ "error": { "code", "message", "hint" } }` with proper 404 / 422 / 503 status codes, and the UI shows the message and hint.
+- Responses carry `Cache-Control`: finished sessions are cacheable for 30 days on the CDN, sessions from the last 24 hours for 5 minutes, calendars and standings for 30 minutes.
+- Errors come back as `{ "error": { "code", "message", "hint" } }` with proper 404 / 422 / 503 status codes, and the UI shows the message and hint. If the API is asleep or still downloading, the proxy answers 502/504 and the app retries automatically.
 
 </details>
 
@@ -394,7 +400,7 @@ uvicorn app.main:app --reload        # http://127.0.0.1:8000/docs
 # Terminal 2 — web
 cd frontend
 npm install
-npm run dev                          # http://localhost:3000
+npm run dev                          # http://localhost:3000 (proxies to the API on :8000)
 ```
 
 If activation is blocked, run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` once.
@@ -451,31 +457,47 @@ GitHub Actions runs all of these on every push and pull request.
 
 ## 🚀 Deploy
 
+**Website on Vercel + data API on a free Hugging Face Space** — click-by-click instructions in **[docs/DEPLOY.md](docs/DEPLOY.md)**.
+
 ```mermaid
 flowchart LR
-    GH["GitHub<br/>main"] -->|"auto deploy"| V["Vercel<br/>frontend/"]
-    GH -->|"render.yaml"| R["Render<br/>backend/Dockerfile"]
-    R --- D[("10 GB disk<br/>FastF1 cache")]
-    V -->|"NEXT_PUBLIC_API_URL"| R
+    GH["GitHub main"] -->|"auto deploy"| V["Vercel<br/>frontend/"]
+    GH -->|"Deploy API workflow"| H["Hugging Face Space<br/>backend/ (Docker, 16 GB RAM)"]
+    V -->|"PITWALL_API_ORIGIN"| H
+    K["Keep API warm<br/>(twice a day)"] -.-> V
 ```
 
-1. **API → Render.** New → Blueprint → pick this repo; `render.yaml` sets up the Docker service, health check and a persistent disk for the cache. Use at least the **Starter** plan — a loaded race needs a few hundred MB of RAM. Set `CORS_ORIGINS` to your Vercel URL. (Railway, Fly.io and Hugging Face Spaces work too with `backend/Dockerfile`; mount a volume at `/data/fastf1-cache`.)
-2. **Web → Vercel.** Import the repo, set **Root Directory** to `frontend`, add `NEXT_PUBLIC_API_URL=https://<your-api-host>`, deploy. Every page is statically prerendered and calls the API from the browser.
+1. Create a Docker Space on Hugging Face, add `HF_TOKEN` (secret) and `HF_SPACE` (variable) to this repo, run **Actions → Deploy API to Hugging Face**.
+2. Import the repo on Vercel with **Root Directory** `frontend` and `PITWALL_API_ORIGIN=https://<user>-pitwall-api.hf.space`.
+3. Optionally set the `SITE_URL` variable so the **Keep API warm** workflow stops the free Space from sleeping.
+
+Prefer a paid always-on API? `render.yaml` is a ready Render Blueprint, and `docker compose up -d --build` runs everything on any server.
 
 <details>
-<summary><b>Backend environment variables</b></summary>
+<summary><b>Environment variables</b></summary>
 <br>
+
+**API (`backend/`)**
 
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `F1_CACHE_DIR` | `../cache` | FastF1 on-disk cache |
-| `F1_SESSION_CACHE_SIZE` | `3` | Fully loaded sessions kept in memory |
+| `F1_SESSION_CACHE_SIZE` | `3` (16 on the Space) | Fully loaded sessions kept in memory (~210 MB each) |
+| `F1_WARM` | off (`latest` in Docker) | Pre-load the latest races in the background at startup |
+| `F1_WARM_EVENTS` | `2` | How many recent race weekends to pre-load |
 | `F1_SEASONS` | `2023,2024,2025,2026` | Seasons the API exposes |
-| `F1_DEFAULT_SEASON` | `2025` | Season the dashboard opens on |
-| `CORS_ORIGINS` | `http://localhost:3000` | Allowed frontend origins (comma separated) |
-| `CORS_ORIGIN_REGEX` | `https://.*\.vercel\.app` | Extra allowed origins (Vercel previews) |
+| `F1_DEFAULT_SEASON` | newest season with a finished race | Season the dashboard opens on |
+| `CORS_ORIGINS` | `http://localhost:3000` | Allowed origins for direct browser access |
+| `CORS_ORIGIN_REGEX` | `https://.*\.vercel\.app` | Extra allowed origins |
 | `F1_OFFLINE` | `0` | Serve cached sessions only, never hit the network |
 | `JOLPICA_BASE_URL` | `https://api.jolpi.ca/ergast/f1` | Standings source |
+
+**Website (`frontend/`)**
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `PITWALL_API_ORIGIN` | `http://127.0.0.1:8000` | Where the `/api/f1` proxy forwards requests (server-side) |
+| `NEXT_PUBLIC_API_URL` | unset | Optional: call an API directly from the browser instead of through the proxy |
 
 </details>
 
@@ -510,10 +532,12 @@ flowchart LR
 │   │   ├── f1/                  tyres, flags, timing cells, driver avatars
 │   │   └── ui/                  panel, picker, primitives
 │   ├── lib/                     API client and hooks, team registry, formatting
-│   ├── state/                   URL selection, preferences, theme, notifications
-│   └── public/drivers/          optional driver photos + manifest.json
+│   ├── app/api/f1/              same-origin, CDN-cached proxy to the API
+│   ├── state/                   URL selection, preferences, theme, notifications, install
+│   └── public/                  service worker, app icons, optional driver photos
 ├── cache/                       FastF1 cache (two 2025 races included for offline tests)
-├── docs/                        architecture notes and README screenshots
+├── deploy/huggingface/          Space card used by the deploy workflow
+├── docs/                        DEPLOY guide, architecture notes, README screenshots
 ├── notebooks/, src/             original exploration notebooks and helpers
 ├── render.yaml                  Render blueprint for the API
 └── docker-compose.yml           full stack locally
@@ -541,6 +565,8 @@ Drivers without a photo get a generated card in their team's colours with their 
 - [x] Session replay with live race-control notifications
 - [x] Team theming for every 2023–2026 constructor, dark/light mode
 - [x] Docker, Render and Vercel configs, CI
+- [x] Installable app (PWA) with offline caching
+- [x] CDN-cached API proxy, startup warm-up and one-click Hugging Face deploy
 - [ ] Qualifying knockout view (Q1/Q2/Q3 cut-off lines)
 - [ ] More than two drivers on the telemetry overlay
 - [ ] Season-long driver form pages

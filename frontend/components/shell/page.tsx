@@ -1,6 +1,7 @@
 "use client";
 
 import { ErrorState, Loading } from "@/components/ui/primitives";
+import { isTransient } from "@/lib/api/client";
 import { SESSION_LABEL } from "@/lib/f1";
 import { cn } from "@/lib/utils";
 import { useSelection } from "@/state/selection";
@@ -49,6 +50,14 @@ export function SessionGate({ children }: { children: React.ReactNode }) {
       <div className="rounded-lg border border-line bg-surface">
         <ErrorState error={summaryState.error} className="min-h-[50vh]" onRetry={() => summaryState.refetch()} />
       </div>
+    );
+  }
+  if (!summaryState.data && summaryState.failureCount > 0 && isTransient(summaryState.failureReason)) {
+    return (
+      <Loading
+        label="Waking up the data server — this takes about a minute after it has been idle. Retrying automatically…"
+        className="min-h-[50vh] text-center"
+      />
     );
   }
   if (!summaryState.data) {

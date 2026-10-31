@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter
 
 from app.core.config import settings
+from app.data.schedule import current_season
 from app.data.session_store import store
 from app.schemas.events import SeasonsResponse
 
@@ -26,5 +27,5 @@ def health() -> dict:
 def seasons() -> dict:
     return {
         "seasons": list(settings.seasons),
-        "default_season": settings.default_season,
+        "default_season": current_season(),
     }
