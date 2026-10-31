@@ -52,7 +52,7 @@ jobs:
     env:
       HF_TOKEN: ${{ secrets.HF_TOKEN }}
       HF_DATASET: ${{ vars.HF_DATASET }}
-      F1_CACHE_DIR: ${{ runner.temp }}/fastf1-cache
+      F1_CACHE_DIR: /tmp/fastf1-cache
       F1_SEASONS: "2023,2024,2025,2026"
     steps:
       - uses: actions/checkout@v4
@@ -69,7 +69,7 @@ jobs:
         run: >
           python scripts/export_static.py
           --seasons ${{ matrix.season }}
-          --out "${{ runner.temp }}/data-out"
+          --out /tmp/data-out
           --upload
           --time-budget 320
           ${{ github.event.inputs.force == 'true' && '--force' || '' }}
@@ -92,7 +92,7 @@ jobs:
       - run: pip install -r backend/requirements.txt huggingface_hub
       - name: Publish season list
         working-directory: backend
-        run: python scripts/export_static.py --meta --out "${{ runner.temp }}/data-out" --upload
+        run: python scripts/export_static.py --meta --out /tmp/data-out --upload
       - name: Summary
         run: |
           echo "Data URL for Vercel (NEXT_PUBLIC_DATA_URL):" >> "$GITHUB_STEP_SUMMARY"
