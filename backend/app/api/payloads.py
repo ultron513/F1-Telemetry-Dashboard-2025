@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.core.config import settings
+from app.core.errors import InvalidParameterError
 from app.core.memo import memoize
 from app.data.schedule import SessionRef
 from app.data.session_store import store
@@ -21,6 +22,7 @@ from app.services import (
     ratings as ratings_svc,
     replay as replay_svc,
     results as results_svc,
+    simulator as sim_svc,
     strategy as strategy_svc,
     telemetry as telemetry_svc,
     weather as weather_svc,
@@ -122,3 +124,47 @@ def ratings(ref: SessionRef) -> dict[str, Any]:
 @memoize(64, TTL)
 def replay(ref: SessionRef, step: float) -> dict[str, Any]:
     return {**_ctx(ref), **replay_svc.replay(store.get(ref), step)}
+
+
+# --- Strategy simulator -------------------------------------------------------
+
+
+def _require_race(ref: SessionRef) -> None:
+    if ref.kind != "race":
+        raise InvalidParameterError(
+            "The strategy simulator works on races and sprints.",
+            hint="Choose the Race or Sprint session.",
+        )
+
+
+@memoize(64, TTL)
+def sim_model(ref: SessionRef) -> sim_svc.TyreModel:
+    _require_race(ref)
+    return sim_svc.fit(store.get(ref))
+
+
+@memoize(SIZE, TTL)
+def sim_describe(ref: SessionRef, driver: str | None) -> dict[str, Any]:
+    return {**_ctx(ref), **sim_svc.describe(sim_model(ref), driver)}
+
+
+@memoize(SIZE, TTL)
+def sim_run(
+    ref: SessionRef, driver: str, plan: str, runs: int, sc: float | None, vsc: float | None
+) -> dict[str, Any]:
+    return {**_ctx(ref), **sim_svc.simulate(sim_model(ref), driver, plan, runs, sc, vsc)}
+
+
+@memoize(SIZE, TTL)
+def sim_optimise(ref: SessionRef, driver: str, conditions: str) -> dict[str, Any]:
+    return {**_ctx(ref), **sim_svc.optimise(sim_model(ref), driver, conditions)}
+
+
+@memoize(SIZE, TTL)
+def sim_undercut(
+    ref: SessionRef, attacker: str, defender: str, lap: int, compound: str | None
+) -> dict[str, Any]:
+    return {
+        **_ctx(ref),
+        **sim_svc.undercut(store.get(ref), sim_model(ref), attacker, defender, lap, compound),
+    }

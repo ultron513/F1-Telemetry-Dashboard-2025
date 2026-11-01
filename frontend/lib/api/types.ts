@@ -541,3 +541,102 @@ export interface HealthResponse {
   offline: boolean;
   loaded_sessions: { season: number; round: number; session: string }[];
 }
+
+// --- Strategy simulator ---------------------------------------------------
+
+export interface PlanStint {
+  compound: string;
+  laps: number;
+  start_age?: number;
+}
+
+export interface CompoundCurve {
+  compound: string;
+  offset: number | null;
+  wear: number | null;
+  life: number | null;
+  samples: number;
+  source: "fitted" | "estimated" | "prior";
+  points: { age: number; delta: number | null }[];
+}
+
+export interface SimulatorModelResponse extends SessionContext {
+  reference: string;
+  total_laps: number;
+  fuel_effect: number | null;
+  pit_loss: number | null;
+  pit_loss_source: string;
+  lap_noise: number | null;
+  fit_r2: number | null;
+  wet: boolean;
+  mixed_conditions: boolean;
+  viable_laps: Record<string, [number, number][]>;
+  neutralised: { lap: number; kind: string }[];
+  compounds: CompoundCurve[];
+  driver_pace: { code: string; pace: number | null; gap: number | null }[];
+  driver: string | null;
+  actual_plan: PlanStint[];
+}
+
+export interface SimulationResponse extends SessionContext {
+  driver: string;
+  plan: string;
+  actual_plan: string;
+  laps: number;
+  warnings: string[];
+  stops: number;
+  hindsight: { delta: number | null; race_time: number | null; position: number; actual_position: number | null };
+  monte_carlo: {
+    runs: number;
+    sc_rate: number;
+    vsc_rate: number;
+    delta_mean: number | null;
+    delta_p10: number | null;
+    delta_p90: number | null;
+    better_share: number | null;
+    position_mean: number | null;
+    position_histogram: { position: number; share: number | null }[];
+  };
+  laps_detail: { lap: number; plan: number | null; actual: number | null; gap: number | null }[];
+}
+
+export interface RankedPlan {
+  plan: string;
+  stops: number;
+  stints: PlanStint[];
+  pit_laps: number[];
+  delta: number | null;
+  position: number;
+}
+
+export interface OptimiseResponse extends SessionContext {
+  driver: string;
+  conditions: "green" | "hindsight";
+  laps: number;
+  actual_plan: string;
+  actual_position: number | null;
+  evaluated: number;
+  plans: RankedPlan[];
+}
+
+export interface PitScenario {
+  attacker_pits: number;
+  defender_pits: number;
+  final_gap: number | null;
+  attacker_ahead: boolean;
+  gaps: { lap: number; gap: number | null }[];
+}
+
+export interface UndercutResponse extends SessionContext {
+  attacker: string;
+  defender: string;
+  lap: number;
+  gap: number | null;
+  attacker_tyre: { compound: string; age: number; next: string };
+  defender_tyre: { compound: string; age: number; next: string };
+  fresh_tyre_gain: number | null;
+  pit_loss: number | null;
+  undercut: PitScenario;
+  overcut: PitScenario;
+  verdict: "undercut" | "overcut" | "stay" | "safe" | "cover" | "stay-out" | "lose";
+}

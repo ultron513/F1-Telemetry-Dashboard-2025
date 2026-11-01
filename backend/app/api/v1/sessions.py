@@ -15,6 +15,12 @@ from app.schemas.misc import (
     WeatherResponse,
 )
 from app.schemas.session import DriversResponse, ResultsResponse, SessionSummary
+from app.schemas.simulator import (
+    OptimiseResponse,
+    SimulationResponse,
+    SimulatorModelResponse,
+    UndercutResponse,
+)
 from app.schemas.strategy import (
     DegradationResponse,
     RaceTraceResponse,
@@ -119,3 +125,58 @@ def replay(
     step: Annotated[float, Query(ge=0.5, le=10.0, description="Seconds between frames")] = 1.0,
 ) -> dict:
     return payloads.replay(ref, round(step, 1))
+
+
+# --- Strategy simulator -------------------------------------------------------
+
+Plan = Annotated[
+    str,
+    Query(
+        min_length=3,
+        max_length=80,
+        description="Stints as COMPOUND:LAPS[:AGE], comma separated, e.g. M:20,H:33",
+    ),
+]
+
+
+@router.get("/simulator/model", response_model=SimulatorModelResponse, tags=["Simulator"])
+def simulator_model(ref: Ref, driver: Annotated[str | None, Query(max_length=3)] = None) -> dict:
+    return payloads.sim_describe(ref, norm_driver(driver) if driver else None)
+
+
+@router.get("/simulator/simulate", response_model=SimulationResponse, tags=["Simulator"])
+def simulator_simulate(
+    ref: Ref,
+    driver: Driver,
+    plan: Plan,
+    runs: Annotated[int, Query(ge=50, le=2000)] = 400,
+    sc: Annotated[float | None, Query(ge=0, le=4, description="Expected safety cars")] = None,
+    vsc: Annotated[float | None, Query(ge=0, le=4, description="Expected VSCs")] = None,
+) -> dict:
+    return payloads.sim_run(ref, norm_driver(driver), plan.upper().replace(" ", ""), runs, sc, vsc)
+
+
+@router.get("/simulator/optimise", response_model=OptimiseResponse, tags=["Simulator"])
+def simulator_optimise(
+    ref: Ref,
+    driver: Driver,
+    conditions: Annotated[str, Query(pattern="^(green|hindsight)$")] = "green",
+) -> dict:
+    return payloads.sim_optimise(ref, norm_driver(driver), conditions)
+
+
+@router.get("/simulator/undercut", response_model=UndercutResponse, tags=["Simulator"])
+def simulator_undercut(
+    ref: Ref,
+    attacker: Driver,
+    defender: Driver,
+    lap: Annotated[int, Query(ge=1, le=100)],
+    compound: Annotated[str | None, Query(max_length=12)] = None,
+) -> dict:
+    return payloads.sim_undercut(
+        ref,
+        norm_driver(attacker),
+        norm_driver(defender),
+        lap,
+        compound.upper() if compound else None,
+    )

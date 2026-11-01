@@ -11,6 +11,7 @@ import type {
   FieldPaceResponse,
   HealthResponse,
   LapTableResponse,
+  OptimiseResponse,
   RaceControlResponse,
   RaceTraceResponse,
   RatingsResponse,
@@ -19,9 +20,12 @@ import type {
   SeasonsResponse,
   SessionCode,
   SessionSummary,
+  SimulationResponse,
+  SimulatorModelResponse,
   StandingsResponse,
   StrategyResponse,
   TelemetryResponse,
+  UndercutResponse,
   WeatherResponse,
 } from "./types";
 
@@ -130,3 +134,38 @@ export const useRecommendation = (k: SessionKey | null, driver: string | null) =
 
 export const useReplay = (k: SessionKey | null, enabled = true) =>
   useSessionQuery<ReplayResponse>(k, "replay", { step: 1 }, enabled);
+
+// --- Strategy simulator ---------------------------------------------------
+
+export const useSimulatorModel = (k: SessionKey | null, driver: string | null, enabled = true) =>
+  useSessionQuery<SimulatorModelResponse>(k, "simulator/model", { driver: driver ?? undefined }, enabled);
+
+export const useSimulation = (
+  k: SessionKey | null,
+  driver: string | null,
+  plan: string | null,
+  sc: number,
+  vsc: number,
+) =>
+  useSessionQuery<SimulationResponse>(
+    k,
+    "simulator/simulate",
+    { driver: driver ?? undefined, plan: plan ?? undefined, sc, vsc },
+    !!driver && !!plan,
+  );
+
+export const useOptimise = (k: SessionKey | null, driver: string | null, conditions: "green" | "hindsight") =>
+  useSessionQuery<OptimiseResponse>(k, "simulator/optimise", { driver: driver ?? undefined, conditions }, !!driver);
+
+export const useUndercut = (
+  k: SessionKey | null,
+  attacker: string | null,
+  defender: string | null,
+  lap: number | null,
+) =>
+  useSessionQuery<UndercutResponse>(
+    k,
+    "simulator/undercut",
+    { attacker: attacker ?? undefined, defender: defender ?? undefined, lap: lap ?? undefined },
+    !!attacker && !!defender && attacker !== defender && lap != null,
+  );
