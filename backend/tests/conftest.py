@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import os
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -19,6 +20,7 @@ sys.path.insert(0, str(BACKEND))
 
 os.environ.setdefault("F1_OFFLINE", "1")
 os.environ.setdefault("F1_CACHE_DIR", str(REPO / "cache"))
+os.environ.setdefault("F1_WAREHOUSE_DIR", tempfile.mkdtemp(prefix="pitwall-warehouse-"))
 
 CACHED_RACE = (2025, 3, "R")  # Japanese GP 2025
 CACHED_RACE_DIR = REPO / "cache" / "2025" / "2025-04-06_Japanese_Grand_Prix" / "2025-04-06_Race"

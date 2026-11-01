@@ -28,3 +28,10 @@ def seasons() -> dict:
         "seasons": list(settings.seasons),
         "default_season": settings.default_season,
     }
+
+
+@router.get("/warehouse", summary="Sessions in the season warehouse")
+def warehouse_inventory() -> dict:
+    from app.warehouse import store as warehouse
+
+    return {"sessions": warehouse.inventory()}

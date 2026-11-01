@@ -81,6 +81,16 @@ class Settings:
     )
     http_timeout: float = 12.0
 
+    # Parquet warehouse for season-wide analytics (DuckDB).
+    warehouse_dir: Path = field(
+        default_factory=lambda: Path(
+            os.getenv("F1_WAREHOUSE_DIR", str(PROJECT_ROOT / "data" / "warehouse"))
+        )
+    )
+    warehouse_auto_ingest: bool = field(
+        default_factory=lambda: _env_bool("F1_WAREHOUSE_AUTO_INGEST", True)
+    )
+
     # Payload caches for derived (already-serialised) results.
     payload_cache_size: int = field(default_factory=lambda: _env_int("F1_PAYLOAD_CACHE_SIZE", 512))
     payload_cache_ttl: int = field(

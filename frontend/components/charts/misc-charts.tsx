@@ -80,7 +80,9 @@ export function RatingRadar({
   a,
   b,
   size = 300,
+  floor = 55,
 }: {
+  floor?: number;
   axes: { key: string; label: string }[];
   a: { label: string; color: string; scores: Record<string, number | null> };
   b?: { label: string; color: string; scores: Record<string, number | null>; dashed?: boolean };
@@ -91,13 +93,13 @@ export function RatingRadar({
   const R = size / 2 - 30;
   const n = axes.length;
   const angle = (i: number) => -Math.PI / 2 + (i * 2 * Math.PI) / n;
-  const r = (v: number | null) => (Math.max(55, Math.min(100, v ?? 55)) - 55) / 45 * R;
+  const r = (v: number | null) => ((Math.max(floor, Math.min(100, v ?? floor)) - floor) / (100 - floor)) * R;
   const poly = (scores: Record<string, number | null>) =>
     axes.map((ax, i) => `${cx + Math.cos(angle(i)) * r(scores[ax.key])},${cy + Math.sin(angle(i)) * r(scores[ax.key])}`).join(" ");
 
   return (
     <svg viewBox={`-56 -6 ${size + 112} ${size + 12}`} className="mx-auto w-full max-w-[380px]" role="img" aria-label={`Rating comparison ${a.label}${b ? ` vs ${b.label}` : ""}`}>
-      {[60, 70, 80, 90, 100].map((lvl) => (
+      {[0.2, 0.4, 0.6, 0.8, 1].map((f) => floor + f * (100 - floor)).map((lvl) => (
         <polygon
           key={lvl}
           points={axes.map((_, i) => `${cx + Math.cos(angle(i)) * r(lvl)},${cy + Math.sin(angle(i)) * r(lvl)}`).join(" ")}

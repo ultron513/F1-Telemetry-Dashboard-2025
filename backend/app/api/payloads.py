@@ -15,6 +15,7 @@ from app.core.memo import memoize
 from app.data.schedule import SessionRef
 from app.data.session_store import store
 from app.services import (
+    analysis as analysis_svc,
     circuit as circuit_svc,
     common,
     laps as laps_svc,
@@ -168,3 +169,44 @@ def sim_undercut(
         **_ctx(ref),
         **sim_svc.undercut(store.get(ref), sim_model(ref), attacker, defender, lap, compound),
     }
+
+
+# --- Driver & car analysis ---------------------------------------------------
+
+
+@memoize(SIZE, TTL)
+def style(ref: SessionRef, drivers: tuple[str, ...]) -> dict[str, Any]:
+    track = circuit(ref)
+    data = analysis_svc.driving_style(
+        store.get(ref), list(drivers), track["corners"], track["length"]
+    )
+    return {**_ctx(ref), **data, "comparison": analysis_svc.corner_compare(data)}
+
+
+@memoize(SIZE, TTL)
+def ideal_lap(ref: SessionRef, driver: str) -> dict[str, Any]:
+    track = circuit(ref)
+    session = store.get(ref)
+    return {
+        **_ctx(ref),
+        **analysis_svc.ideal_lap(session, driver, track["sectors"], track["length"]),
+        "field": analysis_svc.field_ideal(session),
+    }
+
+
+@memoize(SIZE, TTL)
+def cars(ref: SessionRef) -> dict[str, Any]:
+    track = circuit(ref)
+    return {
+        **_ctx(ref),
+        **analysis_svc.car_characteristics(store.get(ref), track["corners"], track["length"]),
+    }
+
+
+@memoize(SIZE, TTL)
+def tyre_management(ref: SessionRef) -> dict[str, Any]:
+    if ref.kind != "race":
+        raise InvalidParameterError(
+            "Tyre management is rated on race stints.", hint="Choose the Race session."
+        )
+    return {**_ctx(ref), **analysis_svc.tyre_management(store.get(ref))}

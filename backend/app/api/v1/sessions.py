@@ -7,6 +7,12 @@ from fastapi import APIRouter, Depends, Query
 from app.api import payloads
 from app.api.deps import norm_driver, norm_lap, session_ref
 from app.data.schedule import SessionRef
+from app.schemas.analysis import (
+    CarsResponse,
+    IdealLapResponse,
+    StyleResponse,
+    TyreManagementResponse,
+)
 from app.schemas.laps import FieldPaceResponse, LapTableResponse
 from app.schemas.misc import (
     RaceControlResponse,
@@ -180,3 +186,30 @@ def simulator_undercut(
         lap,
         compound.upper() if compound else None,
     )
+
+
+# --- Driver & car analysis ---------------------------------------------------
+
+
+@router.get("/analysis/style", response_model=StyleResponse, tags=["Analysis"])
+def analysis_style(
+    ref: Ref,
+    drivers: Annotated[str, Query(description="One or two driver codes, comma separated")],
+) -> dict:
+    codes = tuple(dict.fromkeys(norm_driver(c) for c in drivers.split(",") if c.strip()))[:2]
+    return payloads.style(ref, codes)
+
+
+@router.get("/analysis/ideal-lap", response_model=IdealLapResponse, tags=["Analysis"])
+def analysis_ideal_lap(ref: Ref, driver: Driver) -> dict:
+    return payloads.ideal_lap(ref, norm_driver(driver))
+
+
+@router.get("/analysis/cars", response_model=CarsResponse, tags=["Analysis"])
+def analysis_cars(ref: Ref) -> dict:
+    return payloads.cars(ref)
+
+
+@router.get("/analysis/tyre-management", response_model=TyreManagementResponse, tags=["Analysis"])
+def analysis_tyre_management(ref: Ref) -> dict:
+    return payloads.tyre_management(ref)

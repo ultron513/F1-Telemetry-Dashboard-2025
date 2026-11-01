@@ -28,3 +28,4 @@ Thumbs.db
 # Local transfer artefacts
 .transfer_src.tar
 _to_delete/
+data/warehouse/

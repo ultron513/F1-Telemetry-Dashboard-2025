@@ -4,6 +4,11 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { apiGet } from "./client";
 import type {
+  CarsResponse,
+  IdealLapResponse,
+  StyleResponse,
+  TeammateBattleResponse,
+  TyreManagementResponse,
   CircuitResponse,
   CompareResponse,
   DegradationResponse,
@@ -176,5 +181,28 @@ export function useLiveStatus() {
     queryKey: ["live-status"],
     queryFn: ({ signal }) => apiGet<LiveStatus>("/live/status", undefined, signal),
     refetchInterval: 60_000,
+  });
+}
+
+// --- Driver & car analysis ----------------------------------------------------
+
+export const useStyle = (k: SessionKey | null, drivers: string[]) =>
+  useSessionQuery<StyleResponse>(k, "analysis/style", { drivers: drivers.join(",") || undefined }, drivers.length > 0);
+
+export const useIdealLap = (k: SessionKey | null, driver: string | null) =>
+  useSessionQuery<IdealLapResponse>(k, "analysis/ideal-lap", { driver: driver ?? undefined }, !!driver);
+
+export const useCars = (k: SessionKey | null) => useSessionQuery<CarsResponse>(k, "analysis/cars");
+
+export const useTyreManagement = (k: SessionKey | null, enabled: boolean) =>
+  useSessionQuery<TyreManagementResponse>(k, "analysis/tyre-management", undefined, enabled);
+
+export function useTeammates(season: number | null) {
+  return useQuery({
+    queryKey: ["teammates", season],
+    queryFn: ({ signal }) => apiGet<TeammateBattleResponse>(`/seasons/${season}/teammates`, undefined, signal),
+    enabled: season != null,
+    staleTime: 10 * 60 * 1000,
+    retry: 0,
   });
 }

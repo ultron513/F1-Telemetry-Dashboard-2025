@@ -729,3 +729,110 @@ export interface LiveStatus {
   feed_running: boolean;
   viewers: number;
 }
+
+// --- Driver & car analysis ----------------------------------------------------
+
+export interface CornerStyle {
+  number: number | null;
+  letter: string;
+  class: "slow" | "medium" | "fast";
+  apex_distance: number | null;
+  brake_point: number | null;
+  braked: boolean;
+  entry_speed: number | null;
+  apex_speed: number | null;
+  exit_speed: number | null;
+  gear: number;
+  throttle_pickup: number | null;
+  time: number | null;
+}
+
+export interface StyleResponse extends SessionContext {
+  axes: { key: string; label: string; description: string }[];
+  drivers: {
+    code: string;
+    team: string;
+    team_color: string | null;
+    lap: { lap: number | null; time: number | null } | null;
+    scores: Record<string, number | null>;
+    raw: Record<string, number | null>;
+    corners: CornerStyle[];
+  }[];
+  field_size: number;
+  comparison: { corner: string; class: string; time_delta: number | null; apex_delta: number | null; brake_delta: number | null }[];
+}
+
+export interface IdealLapResponse extends SessionContext {
+  driver: DriverInfo;
+  laps_used: number[];
+  fastest_lap: { lap: number | null; time: number | null };
+  ideal_time: number | null;
+  gain: number | null;
+  sector_theoretical: number | null;
+  minisectors: {
+    index: number;
+    start: number | null;
+    end: number | null;
+    best: number | null;
+    best_lap: number;
+    sector: number;
+    fastest_lap_time: number | null;
+    loss: number | null;
+  }[];
+  field: { code: string; team: string; team_color: string | null; best: number | null; theoretical: number | null; gain: number | null }[];
+}
+
+export interface TeamCar {
+  team: string;
+  team_color: string | null;
+  driver: string;
+  lap_time: number | null;
+  speed_trap: number | null;
+  top_speed: number | null;
+  slow_corners: number | null;
+  medium_corners: number | null;
+  fast_corners: number | null;
+  full_throttle: number | null;
+  straight_index: number | null;
+  corner_index: number | null;
+  drag_bias: number | null;
+  profile: "Low drag" | "High downforce" | "Balanced";
+}
+
+export interface CarsResponse extends SessionContext {
+  teams: TeamCar[];
+}
+
+export interface TyreManagementResponse extends SessionContext {
+  compound_median: Record<string, number | null>;
+  drivers: {
+    code: string;
+    team: string | null;
+    team_color: string | null;
+    relative_degradation: number | null;
+    consistency: number | null;
+    stints: number;
+    score: number;
+  }[];
+  teammates: { team: string | null; drivers: string[]; delta: number | null }[];
+}
+
+export interface TeammatePair {
+  team: string;
+  team_color: string | null;
+  drivers: string[];
+  race: number[];
+  quali: number[];
+  points: (number | null)[];
+  pace_gap: number | null;
+  pace_races: number;
+  races: number;
+  rounds: { round: number; race: string | null; quali: string | null; quali_source: string | null; pace_gap: number | null }[];
+}
+
+export interface TeammateBattleResponse {
+  season: number;
+  rounds: number[];
+  pairs: TeammatePair[];
+  ingested: { season: number; round: number; session: string }[];
+}

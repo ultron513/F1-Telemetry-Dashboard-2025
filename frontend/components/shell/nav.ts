@@ -1,5 +1,7 @@
 import {
   Activity,
+  Microscope,
+  UserRoundCheck,
   CloudSun,
   Flag,
   FlaskConical,
@@ -33,6 +35,7 @@ export const NAV: { section: string; items: NavItem[] }[] = [
       { href: "/track-map", label: "Track map", icon: Route, description: "Speed, gear and dominance around the lap" },
       { href: "/strategy", label: "Strategy", icon: Layers, description: "Tyres, pit stops, degradation and race trace" },
       { href: "/simulator", label: "Simulator", icon: FlaskConical, description: "Re-run the race with a different tyre plan" },
+      { href: "/analysis", label: "Driver & car", icon: Microscope, description: "Driving style, ideal lap, car traits, tyre care" },
       { href: "/performance", label: "Head to head", icon: Swords, description: "Driver ratings and lap comparison" },
       { href: "/race-control", label: "Race control", icon: Flag, description: "Replay, flags, stewards and track status" },
       { href: "/weather", label: "Weather", icon: CloudSun, description: "Temperatures, wind and rain through the session" },
@@ -42,6 +45,7 @@ export const NAV: { section: string; items: NavItem[] }[] = [
     section: "Season",
     items: [
       { href: "/standings", label: "Standings", icon: Trophy, description: "Championship tables and points progression" },
+      { href: "/teammates", label: "Team-mates", icon: UserRoundCheck, description: "Season head-to-heads within each team" },
       { href: "/drivers", label: "Drivers", icon: Users, description: "The grid for this session" },
     ],
   },

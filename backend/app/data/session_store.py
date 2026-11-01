@@ -58,6 +58,10 @@ class SessionStore:
                 while len(self._sessions) > self.maxsize:
                     evicted, _ = self._sessions.popitem(last=False)
                     log.info("Evicted session %s", evicted)
+            # Flatten into the season warehouse (no-op if already there).
+            from app.warehouse.store import ingest_in_background
+
+            ingest_in_background(ref, session)
             return session
 
     def _load(self, ref: SessionRef) -> Session:

@@ -5,8 +5,10 @@ from typing import Annotated
 from fastapi import APIRouter, Path, Query
 
 from app.data import schedule
+from app.schemas.analysis import TeammateBattleResponse
 from app.schemas.events import Event, EventsResponse
 from app.schemas.misc import StandingsResponse
+from app.services import season as season_svc
 from app.services.standings import standings as standings_svc
 
 router = APIRouter(prefix="/seasons/{season}", tags=["Calendar & Championship"])
@@ -45,3 +47,12 @@ def standings(
     ] = None,
 ) -> dict:
     return standings_svc(season, round)
+
+
+@router.get(
+    "/teammates",
+    response_model=TeammateBattleResponse,
+    summary="Team-mate head-to-head across the season (from the warehouse)",
+)
+def teammates(season: Season) -> dict:
+    return season_svc.teammate_battle(season)
