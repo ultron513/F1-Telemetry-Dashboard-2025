@@ -71,3 +71,24 @@ export async function apiGet<T>(path: string, params?: Params, signal?: AbortSig
 
   return (await response.json()) as T;
 }
+
+/** POST JSON (operations endpoints); errors use the same structure as GET. */
+export async function apiPost<T>(path: string, body: unknown, headers: Record<string, string> = {}): Promise<T> {
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}/api/v1${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json", ...headers },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new ApiError(0, "network", "Can't reach the telemetry API.", `Check that the backend is running at ${API_BASE_URL}.`);
+  }
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    const err = data?.error;
+    const detail = Array.isArray(data?.detail) ? data.detail.map((d: { msg: string }) => d.msg).join("; ") : null;
+    throw new ApiError(response.status, err?.code ?? "http_error", err?.message ?? detail ?? `Request failed with status ${response.status}.`, err?.hint ?? null);
+  }
+  return data as T;
+}

@@ -4,6 +4,9 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { apiGet } from "./client";
 import type {
+  JobInfo,
+  QueueStats,
+  StatusResponse,
   CareerResponse,
   ChampionsResponse,
   CircuitHistoryResponse,
@@ -266,5 +269,25 @@ export function useCircuitHistory(id: string | null) {
     queryFn: ({ signal }) => apiGet<CircuitHistoryResponse>(`/history/circuits/${id}`, undefined, signal),
     enabled: !!id,
     staleTime: DAY,
+  });
+}
+
+// --- Operations --------------------------------------------------------------------
+
+export function useStatus() {
+  return useQuery({
+    queryKey: ["ops", "status"],
+    queryFn: ({ signal }) => apiGet<StatusResponse>("/status", undefined, signal),
+    refetchInterval: 10_000,
+    retry: 0,
+  });
+}
+
+export function useJobs() {
+  return useQuery({
+    queryKey: ["ops", "jobs"],
+    queryFn: ({ signal }) => apiGet<QueueStats & { jobs: JobInfo[] }>("/jobs", { limit: 20 }, signal),
+    refetchInterval: 5_000,
+    retry: 0,
   });
 }

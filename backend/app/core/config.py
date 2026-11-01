@@ -96,6 +96,13 @@ class Settings:
         default_factory=lambda: _env_bool("F1_WAREHOUSE_AUTO_INGEST", True)
     )
 
+    # Background jobs: Redis + RQ workers when set, otherwise an in-process pool.
+    redis_url: str | None = field(default_factory=lambda: os.getenv("REDIS_URL") or None)
+    # Protects job endpoints (POST /jobs/*). Unset: open (fine for local use).
+    admin_token: str | None = field(
+        default_factory=lambda: os.getenv("PITWALL_ADMIN_TOKEN") or None
+    )
+
     # Payload caches for derived (already-serialised) results.
     payload_cache_size: int = field(default_factory=lambda: _env_int("F1_PAYLOAD_CACHE_SIZE", 512))
     payload_cache_ttl: int = field(

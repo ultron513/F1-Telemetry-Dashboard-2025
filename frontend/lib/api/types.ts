@@ -944,3 +944,39 @@ export interface CircuitHistoryResponse {
     fastest_lap: number | null;
   }[];
 }
+
+// --- Operations --------------------------------------------------------------------
+
+export interface JobInfo {
+  id: string;
+  function: string;
+  args: unknown[];
+  description: string;
+  status: string;
+  enqueued_at: number | null;
+  started_at: number | null;
+  ended_at: number | null;
+  result: Record<string, unknown> | null;
+  error: string | null;
+}
+
+export interface QueueStats {
+  backend: "redis" | "in-process";
+  workers: number;
+  counts: Record<string, number>;
+}
+
+export interface StatusResponse {
+  service: string;
+  version: string;
+  uptime_seconds: number;
+  offline: boolean;
+  tracing: boolean;
+  requests: { total: number; errors: number; by_status: Record<string, number> };
+  routes: { method: string; route: string; requests: number; errors: number; mean_ms: number | null; p50_ms: number | null; p95_ms: number | null; p99_ms: number | null }[];
+  sessions: { loaded: { season: number; round: number; session: string; load_seconds: number }[]; capacity: number };
+  payload_cache: { entries: number; caches: number };
+  queue: QueueStats;
+  warehouse: { sessions: number };
+  history_cache: { responses: number };
+}

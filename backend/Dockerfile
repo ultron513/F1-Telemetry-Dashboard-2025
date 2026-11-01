@@ -5,6 +5,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     F1_CACHE_DIR=/data/fastf1-cache \
+    F1_WAREHOUSE_DIR=/data/warehouse \
+    F1_HISTORY_CACHE_DIR=/data/jolpica \
     PORT=8000
 
 WORKDIR /app
@@ -17,10 +19,10 @@ COPY main.py .
 
 # Non-root user; the cache lives on a mountable volume.
 RUN useradd --create-home --uid 10001 pitwall \
-    && mkdir -p /data/fastf1-cache \
+    && mkdir -p /data/fastf1-cache /data/warehouse /data/jolpica \
     && chown -R pitwall:pitwall /data /app
 USER pitwall
-VOLUME ["/data/fastf1-cache"]
+VOLUME ["/data/fastf1-cache", "/data/warehouse", "/data/jolpica"]
 
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \

@@ -18,6 +18,7 @@ from fastf1.core import Session
 
 from app.core.config import settings
 from app.core.errors import DataUnavailableError
+from app.core.observability import span
 from app.data.schedule import SessionRef, is_session_in_future
 
 log = logging.getLogger("pitwall.sessions")
@@ -72,8 +73,9 @@ class SessionStore:
             )
         started = time.perf_counter()
         try:
-            session = fastf1.get_session(ref.season, ref.round, ref.code)
-            session.load(laps=True, telemetry=True, weather=True, messages=True)
+            with span("session.load", season=ref.season, round=ref.round, session=ref.code):
+                session = fastf1.get_session(ref.season, ref.round, ref.code)
+                session.load(laps=True, telemetry=True, weather=True, messages=True)
         except Exception as exc:
             raise DataUnavailableError(
                 f"Timing data for {ref.name} (round {ref.round}, {ref.season}) "

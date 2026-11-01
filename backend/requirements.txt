@@ -9,3 +9,10 @@ scipy==1.18.1
 requests==2.34.2
 duckdb==2.0.0
 pyarrow==26.0.0
+# Jobs (optional Redis) and tracing (optional OTLP)
+redis==8.1.0
+rq==3.0.0
+opentelemetry-api==1.45.2
+opentelemetry-sdk==1.45.2
+opentelemetry-instrumentation-fastapi==0.66b2
+opentelemetry-exporter-otlp-proto-http==1.45.2

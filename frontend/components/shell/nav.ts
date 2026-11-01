@@ -9,6 +9,7 @@ import {
   History,
   Layers,
   Radio,
+  ServerCog,
   Route,
   Settings,
   Swords,
@@ -53,7 +54,10 @@ export const NAV: { section: string; items: NavItem[] }[] = [
   },
   {
     section: "App",
-    items: [{ href: "/settings", label: "Settings", icon: Settings, description: "Units, theming and alerts" }],
+    items: [
+      { href: "/settings", label: "Settings", icon: Settings, description: "Units, theming and alerts" },
+      { href: "/status", label: "Status", icon: ServerCog, description: "Service health, latency and background jobs" },
+    ],
   },
 ];
 

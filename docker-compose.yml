@@ -1,14 +1,54 @@
 # Full stack on one machine: `docker compose up --build` → http://localhost:3000
+#
+#   web     Next.js dashboard
+#   api     FastAPI (one process; sessions live in memory)
+#   worker  RQ workers: download sessions, fill the Parquet warehouse, warm caches
+#   redis   job queue
+#
+# Scale workers with `docker compose up --scale worker=3`.
+x-backend: &backend
+  build: ./backend
+  environment: &backend-env
+    F1_SESSION_CACHE_SIZE: "3"
+    F1_WAREHOUSE_DIR: /data/warehouse
+    F1_HISTORY_CACHE_DIR: /data/jolpica
+    REDIS_URL: redis://redis:6379/0
+    # Set to protect POST /api/v1/jobs/* (send it as X-Admin-Token).
+    PITWALL_ADMIN_TOKEN: ${PITWALL_ADMIN_TOKEN:-}
+    # Uncomment to export traces (e.g. to Jaeger at http://localhost:16686):
+    # OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+  volumes:
+    - ./cache:/data/fastf1-cache
+    - warehouse:/data/warehouse
+    - history:/data/jolpica
+  depends_on:
+    redis:
+      condition: service_healthy
+  restart: unless-stopped
+
 services:
+  redis:
+    image: redis:7.4-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redis:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
   api:
-    build: ./backend
+    <<: *backend
     ports: ["8000:8000"]
     environment:
-      F1_SESSION_CACHE_SIZE: "3"
+      <<: *backend-env
       CORS_ORIGINS: http://localhost:3000
-    volumes:
-      - ./cache:/data/fastf1-cache
-    restart: unless-stopped
+
+  worker:
+    <<: *backend
+    command: ["python", "-m", "app.jobs.worker"]
+    healthcheck:
+      disable: true
 
   web:
     build:
@@ -18,3 +58,14 @@ services:
     ports: ["3000:3000"]
     depends_on: [api]
     restart: unless-stopped
+
+  # Optional tracing UI: `docker compose --profile tracing up`
+  jaeger:
+    image: jaegertracing/all-in-one:1.62.0
+    profiles: ["tracing"]
+    ports: ["16686:16686", "4318:4318"]
+
+volumes:
+  warehouse:
+  history:
+  redis:
