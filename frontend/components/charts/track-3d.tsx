@@ -93,7 +93,16 @@ export function Track3D({
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(42, el.clientWidth / height, 1, span * 10);
-    camera.position.set(span * 0.05, span * 0.5, span * 0.62);
+    // Frame the whole circuit: distance from the tighter of the two fields of view.
+    const fitCamera = (aspect: number) => {
+      const v = THREE.MathUtils.degToRad(camera.fov) / 2;
+      const h = Math.atan(Math.tan(v) * aspect);
+      const dist = (span / 2 / Math.tan(Math.min(v, h))) * 1.08;
+      camera.position.copy(new THREE.Vector3(0, 0.78, 0.62).normalize().multiplyScalar(dist));
+      camera.far = dist * 6;
+      camera.updateProjectionMatrix();
+    };
+    fitCamera(el.clientWidth / height);
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.maxPolarAngle = Math.PI / 2.05;
