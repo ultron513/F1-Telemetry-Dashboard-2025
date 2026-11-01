@@ -11,6 +11,7 @@ import type {
   FieldPaceResponse,
   HealthResponse,
   LapTableResponse,
+  LiveStatus,
   OptimiseResponse,
   RaceControlResponse,
   RaceTraceResponse,
@@ -169,3 +170,11 @@ export const useUndercut = (
     { attacker: attacker ?? undefined, defender: defender ?? undefined, lap: lap ?? undefined },
     !!attacker && !!defender && attacker !== defender && lap != null,
   );
+
+export function useLiveStatus() {
+  return useQuery({
+    queryKey: ["live-status"],
+    queryFn: ({ signal }) => apiGet<LiveStatus>("/live/status", undefined, signal),
+    refetchInterval: 60_000,
+  });
+}

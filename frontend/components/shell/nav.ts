@@ -5,6 +5,7 @@ import {
   FlaskConical,
   Gauge,
   Layers,
+  Radio,
   Route,
   Settings,
   Swords,
@@ -26,6 +27,7 @@ export const NAV: { section: string; items: NavItem[] }[] = [
     section: "Session",
     items: [
       { href: "/", label: "Overview", icon: Gauge, description: "Result, highlights and the season so far" },
+      { href: "/live", label: "Live", icon: Radio, description: "Live timing, pit windows and win chances" },
       { href: "/telemetry", label: "Telemetry", icon: Activity, description: "Speed, throttle, brake, gear and delta traces" },
       { href: "/laps", label: "Lap analysis", icon: Timer, description: "Timing screen, stints and pace distribution" },
       { href: "/track-map", label: "Track map", icon: Route, description: "Speed, gear and dominance around the lap" },

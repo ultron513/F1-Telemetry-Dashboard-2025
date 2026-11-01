@@ -640,3 +640,92 @@ export interface UndercutResponse extends SessionContext {
   overcut: PitScenario;
   verdict: "undercut" | "overcut" | "stay" | "safe" | "cover" | "stay-out" | "lose";
 }
+
+// --- Live race mode ---------------------------------------------------------
+
+export interface LiveDriver {
+  number: string;
+  code: string;
+  name: string;
+  team: string | null;
+  team_color: string | null;
+  position: number;
+  gap: number | null;
+  laps_down: number;
+  interval: number | null;
+  laps: number | null;
+  last_lap: number | null;
+  last_lap_personal_best: boolean;
+  last_lap_overall_best: boolean;
+  best_lap: number | null;
+  in_pit: boolean;
+  pit_out: boolean;
+  pit_stops: number;
+  retired: boolean;
+  compound: string | null;
+  tyre_age: number | null;
+  new_tyre: boolean;
+  compounds_used: string[];
+}
+
+export interface LivePitWindow {
+  number: string;
+  code: string;
+  position: number;
+  rejoin_position: number;
+  positions_lost: number;
+  car_ahead: string | null;
+  gap_ahead: number | null;
+  car_behind: string | null;
+  gap_behind: number | null;
+  free_stop: boolean;
+  owes_stop: boolean;
+}
+
+export interface LiveProbability {
+  number: string;
+  code: string;
+  team_color: string | null;
+  win: number;
+  podium: number;
+  pace: number;
+}
+
+export type LiveAlertKind =
+  | "safety-car" | "red-flag" | "vsc" | "green" | "lead-change" | "fastest-lap" | "pit"
+  | "retirement" | "penalty" | "investigation" | "chequered" | "rain";
+
+export interface LiveAlert {
+  kind: LiveAlertKind;
+  severity: string;
+  title: string;
+  message: string;
+  lap: number | null;
+  clock: string | null;
+}
+
+export interface LiveSnapshot {
+  type: "snapshot";
+  clock: string;
+  session: { name: string | null; type: string | null; meeting: string | null; circuit: string | null; status: string | null };
+  lap: number | null;
+  total_laps: number | null;
+  laps_left: number;
+  track_status: { code: string; label: string };
+  drivers: LiveDriver[];
+  race_control: { utc: string | null; lap: number | null; category: string | null; flag: string | null; scope: string | null; message: string }[];
+  weather: { air: number | null; track: number | null; humidity: number | null; wind: number | null; rain: boolean } | null;
+  pit_loss: number;
+  pit_window: LivePitWindow[];
+  probabilities: LiveProbability[];
+  alerts: LiveAlert[];
+  replay?: { position: number; duration: number; speed: number; paused: boolean };
+}
+
+export interface LiveStatus {
+  now_utc: string;
+  live: { season: number; round: number; event: string; session: string; name: string; start_utc: string } | null;
+  next: { season: number; round: number; event: string; session: string; name: string; start_utc: string } | null;
+  feed_running: boolean;
+  viewers: number;
+}

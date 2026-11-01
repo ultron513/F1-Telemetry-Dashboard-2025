@@ -8,7 +8,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
-from app.api.v1 import events, meta, sessions
+from app.api.v1 import events, live, meta, sessions
 from app.core.config import settings
 from app.core.errors import register_error_handlers
 from app.core.fastf1_setup import configure_fastf1
@@ -48,6 +48,7 @@ def create_app() -> FastAPI:
     v1.include_router(meta.router)
     v1.include_router(events.router)
     v1.include_router(sessions.router)
+    v1.include_router(live.router)
     app.include_router(v1)
 
     @app.get("/", include_in_schema=False)
