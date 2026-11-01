@@ -5,7 +5,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     F1_CACHE_DIR=/data/fastf1-cache \
-    F1_WARM=latest \
     PORT=8000
 
 WORKDIR /app
@@ -16,8 +15,8 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 COPY app ./app
 COPY main.py .
 
-# Non-root user with UID 1000 (required by Hugging Face Spaces).
-RUN useradd --create-home --uid 1000 pitwall \
+# Non-root user; the cache lives on a mountable volume.
+RUN useradd --create-home --uid 10001 pitwall \
     && mkdir -p /data/fastf1-cache \
     && chown -R pitwall:pitwall /data /app
 USER pitwall

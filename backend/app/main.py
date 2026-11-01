@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,8 +12,6 @@ from app.api.v1 import events, meta, sessions
 from app.core.config import settings
 from app.core.errors import register_error_handlers
 from app.core.fastf1_setup import configure_fastf1
-from app.core.http_cache import register_cache_headers
-from app.core.warmup import start_warmup
 
 logging.basicConfig(
     level=logging.INFO,
@@ -22,17 +19,10 @@ logging.basicConfig(
 )
 
 
-@asynccontextmanager
-async def lifespan(_: FastAPI):
-    start_warmup()
-    yield
-
-
 def create_app() -> FastAPI:
     configure_fastf1()
 
     app = FastAPI(
-        lifespan=lifespan,
         title=settings.app_name,
         version=settings.version,
         description=(
@@ -53,7 +43,6 @@ def create_app() -> FastAPI:
         max_age=86400,
     )
     register_error_handlers(app)
-    register_cache_headers(app)
 
     v1 = APIRouter(prefix="/api/v1")
     v1.include_router(meta.router)

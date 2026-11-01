@@ -7,8 +7,7 @@ import { useLapTable, useSeasons } from "@/lib/api/queries";
 import type { SessionCode } from "@/lib/api/types";
 import { SESSION_LABEL, TIMING } from "@/lib/f1";
 import { countryFlagEmoji, lapTime, shortDate } from "@/lib/format";
-import { STATIC_MODE } from "@/lib/api/static";
-import { eventOpenable, sessionOpenable, useSelection } from "@/state/selection";
+import { useSelection } from "@/state/selection";
 
 export function SeasonPicker({ className }: { className?: string }) {
   const seasons = useSeasons();
@@ -36,8 +35,8 @@ export function EventPicker({ className }: { className?: string }) {
   const items: PickerItem<string>[] = events.map((e) => ({
     value: String(e.round),
     search: `${e.round} ${e.name} ${e.country} ${e.location}`,
-    disabled: !eventOpenable(e),
-    group: e.status === "upcoming" ? "Upcoming" : eventOpenable(e) ? "Completed" : "Not published yet",
+    disabled: e.status === "upcoming",
+    group: e.status === "upcoming" ? "Upcoming" : "Completed",
     label: (
       <>
         <span className="tnum w-6 shrink-0 text-xs text-ink-3">R{e.round}</span>
@@ -69,11 +68,15 @@ export function EventPicker({ className }: { className?: string }) {
   );
 }
 
+function isFuture(iso: string | null) {
+  return !!iso && new Date(iso).getTime() > Date.now();
+}
+
 export function SessionPicker({ className }: { className?: string }) {
   const { event, session, set } = useSelection();
   const items: PickerItem<SessionCode>[] = (event?.sessions ?? []).map((s) => ({
     value: s.code,
-    disabled: !sessionOpenable(s),
+    disabled: isFuture(s.start_utc),
     label: <span>{s.name}</span>,
     hint: s.code,
   }));
@@ -177,17 +180,8 @@ export function LapPicker({
       hint: <span className="tnum">{lapTime(best)}</span>,
       search: "fastest best",
     },
-    ...(STATIC_MODE
-      ? [
-          {
-            value: "__note",
-            disabled: true,
-            label: <span className="text-xs text-ink-3">This deployment publishes each driver&rsquo;s fastest lap</span>,
-          },
-        ]
-      : []),
     ...laps
-      .filter((l) => l.lap != null && !STATIC_MODE)
+      .filter((l) => l.lap != null)
       .map((l) => ({
         value: String(l.lap),
         search: `lap ${l.lap}`,

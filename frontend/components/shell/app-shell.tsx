@@ -14,7 +14,6 @@ import { SelectionProvider, useSelection } from "@/state/selection";
 import { TeamThemeProvider } from "@/state/team-theme";
 
 import { NotificationCenter, Toaster } from "./notifications";
-import { InstallButton, PwaRuntime } from "./pwa";
 import { Brand, NavList, Sidebar } from "./sidebar";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -31,7 +30,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <Toaster />
-        <PwaRuntime />
       </TeamThemeProvider>
     </SelectionProvider>
   );
@@ -102,7 +100,6 @@ function SessionBar() {
         </div>
 
         <div className="flex shrink-0 items-center gap-0.5">
-          <InstallButton />
           <ApiStatus />
           <NotificationCenter />
           <ThemeToggle />
@@ -118,7 +115,7 @@ function SessionBar() {
 function ApiStatus() {
   const health = useHealth();
   const ok = health.data?.status === "ok";
-  const label = health.isLoading ? "Connecting to API" : ok ? `API online (${API_BASE_URL})` : "Data server unreachable or waking up";
+  const label = health.isLoading ? "Connecting to API" : ok ? "API online" : `API unreachable at ${API_BASE_URL}`;
   return (
     <span title={label} className="hidden items-center gap-1.5 px-2 text-xs text-ink-3 xl:inline-flex">
       <span className={cn("size-2 rounded-full", health.isLoading ? "bg-ink-3" : ok ? "bg-good" : "animate-pulse-dot bg-bad")} aria-hidden />

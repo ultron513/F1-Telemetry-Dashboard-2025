@@ -97,14 +97,3 @@ def test_errors(client, race_base):
     )
     assert client.get("/api/v1/sessions/2025/3/XX/summary").status_code == 422
     assert client.get("/api/v1/sessions/2025/40/R/summary").status_code == 422
-
-
-def test_cache_headers(client, race_base):
-    # A 2025 race is long finished: cacheable for weeks on the CDN.
-    r = client.get(f"{race_base}/drivers")
-    assert "s-maxage=2592000" in r.headers["cache-control"]
-    assert client.get("/api/v1/health").headers["cache-control"] == "no-store"
-    assert (
-        client.get(f"{race_base}/laps", params={"driver": "ZZZ"}).headers["cache-control"]
-        == "no-store"
-    )

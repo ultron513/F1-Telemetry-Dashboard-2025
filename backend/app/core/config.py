@@ -62,10 +62,6 @@ class Settings:
         default_factory=lambda: _env_seasons("F1_SEASONS", (2023, 2024, 2025, 2026))
     )
     default_season: int = field(default_factory=lambda: _env_int("F1_DEFAULT_SEASON", 2025))
-    # When F1_DEFAULT_SEASON isn't set, open on the newest season that has a finished race.
-    default_season_pinned: bool = field(
-        default_factory=lambda: bool(os.getenv("F1_DEFAULT_SEASON"))
-    )
 
     cors_origins: list[str] = field(
         default_factory=lambda: _env_list(
@@ -84,10 +80,6 @@ class Settings:
         ).rstrip("/")
     )
     http_timeout: float = 12.0
-
-    # Background pre-load of the most recent races at startup ("" = off).
-    warm: str = field(default_factory=lambda: os.getenv("F1_WARM", "").strip().lower())
-    warm_events: int = field(default_factory=lambda: max(1, _env_int("F1_WARM_EVENTS", 2)))
 
     # Payload caches for derived (already-serialised) results.
     payload_cache_size: int = field(default_factory=lambda: _env_int("F1_PAYLOAD_CACHE_SIZE", 512))
