@@ -243,3 +243,20 @@ def test_report_narration_keeps_template_on_bad_json(client, race_base, monkeypa
     rep = client.get(f"{race_base}/report").json()
     assert rep["mode"] == "llm" and rep["headline"] == "Max masters Suzuka"
     report.narrated_report.cache.clear()
+
+
+def test_follow_ups_skip_topics_already_asked(client, race_base, no_llm):
+    body = client.post(
+        f"{race_base}/ask",
+        json={
+            "question": "Could Norris have undercut Verstappen on lap 19?",
+            "history": [
+                {"role": "user", "content": "Why did Lando finish behind Max?"},
+                {"role": "assistant", "content": "..."},
+            ],
+        },
+    ).json()
+    joined = " ".join(body["follow_ups"])
+    assert "undercut" not in joined
+    assert "Why did NOR finish behind VER" not in joined
+    assert body["follow_ups"]

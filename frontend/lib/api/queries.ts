@@ -1,9 +1,13 @@
 "use client";
 
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 
-import { apiGet } from "./client";
+import { apiGet, apiPost } from "./client";
 import type {
+  AskResponse,
+  ChatTurn,
+  ReportResponse,
+  SuggestionsResponse,
   JobInfo,
   QueueStats,
   StatusResponse,
@@ -289,5 +293,19 @@ export function useJobs() {
     queryFn: ({ signal }) => apiGet<QueueStats & { jobs: JobInfo[] }>("/jobs", { limit: 20 }, signal),
     refetchInterval: 5_000,
     retry: 0,
+  });
+}
+
+// --- AI: session report and Ask the pit wall --------------------------------
+
+export const useReport = (k: SessionKey | null) => useSessionQuery<ReportResponse>(k, "report");
+
+export const useAskSuggestions = (k: SessionKey | null) =>
+  useSessionQuery<SuggestionsResponse>(k, "ask/suggestions");
+
+export function useAsk(k: SessionKey | null) {
+  return useMutation({
+    mutationFn: (body: { question: string; history: ChatTurn[] }) =>
+      apiPost<AskResponse>(sessionPath(k as SessionKey, "ask"), body),
   });
 }

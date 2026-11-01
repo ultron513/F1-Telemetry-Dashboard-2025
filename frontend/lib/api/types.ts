@@ -980,3 +980,71 @@ export interface StatusResponse {
   warehouse: { sessions: number };
   history_cache: { responses: number };
 }
+
+// --- AI: reports and Ask the pit wall ---------------------------------------
+
+export interface SessionInfo {
+  code: SessionCode;
+  name: string;
+  kind: SessionKind;
+}
+
+export interface ReportResponse {
+  season: number;
+  round: number;
+  session: SessionInfo;
+  event: string;
+  mode: "template" | "llm";
+  model: string | null;
+  headline: string;
+  standfirst: string;
+  sections: { title: string; body: string }[];
+  moments: { lap: number | null; kind: string; text: string }[];
+  stats: { label: string; value: string }[];
+}
+
+export type AnswerChart =
+  | { type: "results" }
+  | { type: "race-trace"; drivers: string[] }
+  | { type: "compare"; a: string; b: string }
+  | { type: "strategy"; drivers?: string[] }
+  | { type: "race-control" }
+  | { type: "pace" }
+  | { type: "degradation"; driver: string }
+  | { type: "undercut"; attacker: string; defender: string; lap: number }
+  | { type: "weather" }
+  | { type: "standings" };
+
+export interface ChatTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface AskResponse {
+  season: number;
+  round: number;
+  session: SessionInfo;
+  question: string;
+  mode: "rules" | "llm";
+  model: string | null;
+  intent: string | null;
+  answer: string;
+  charts: AnswerChart[];
+  tools: { name: string; args: Record<string, unknown> }[];
+  follow_ups: string[];
+  notice: string | null;
+}
+
+export interface AssistantInfo {
+  enabled: boolean;
+  provider: string | null;
+  model: string | null;
+}
+
+export interface SuggestionsResponse {
+  season: number;
+  round: number;
+  session: SessionInfo;
+  suggestions: string[];
+  assistant: AssistantInfo;
+}

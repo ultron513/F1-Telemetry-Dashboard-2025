@@ -4,6 +4,7 @@ import { open, settled } from "./helpers";
 
 const PAGES: [string, RegExp][] = [
   ["/", /Japanese Grand Prix|Overview/],
+  ["/ask", /Ask the pit wall/],
   ["/telemetry", /Telemetry/],
   ["/laps", /Lap analysis/],
   ["/track-map", /Track map/],

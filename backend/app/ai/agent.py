@@ -50,7 +50,7 @@ def _s(value: float | None, digits: int = 3) -> str:
 # --- follow-up suggestions -----------------------------------------------------
 
 
-def follow_ups(ref: SessionRef, asked: str = "") -> list[str]:
+def follow_ups(ref: SessionRef, asked: list[str] | tuple[str, ...] = ()) -> list[str]:
     s = payloads.summary(ref)
     order = [r["code"] for r in s["results"] if r.get("position")]
     out: list[str] = []
@@ -69,8 +69,14 @@ def follow_ups(ref: SessionRef, asked: str = "") -> list[str]:
             out.append(f"Where did {order[0]} find time over {order[1]}?")
         out.append("Who had the best pace?")
     out.append("What were the conditions like?")
-    asked_l = asked.lower().strip("?! .")
-    return [q for q in out if q.lower().strip("?! .") != asked_l][:4]
+    # Drop anything already covered, however it was worded: same intent, same drivers.
+    covered = {topic(ref, q) for q in asked}
+    return [q for q in out if topic(ref, q) not in covered][:4]
+
+
+def topic(ref: SessionRef, question: str) -> tuple[str, frozenset[str]]:
+    drivers = facts.find_drivers(ref, question)
+    return RuleAnalyst(ref).intent(question, drivers), frozenset(drivers[:2])
 
 
 # --- rule-based analyst --------------------------------------------------------
@@ -141,7 +147,7 @@ class RuleAnalyst:
             return "driver"
         return "overview"
 
-    def answer(self, question: str) -> dict[str, Any]:
+    def answer(self, question: str, asked: list[str] | None = None) -> dict[str, Any]:
         ref = self.ref
         drivers = facts.find_drivers(ref, question)
         intent = self.intent(question, drivers)
@@ -154,7 +160,7 @@ class RuleAnalyst:
             "answer": text,
             "charts": _dedupe(self.charts),
             "tools": self.used,
-            "follow_ups": follow_ups(ref, question),
+            "follow_ups": follow_ups(ref, [*(asked or []), question]),
         }
 
     # -- intents -------------------------------------------------------------
@@ -599,7 +605,9 @@ class ModelAnalyst:
             "answer": text,
             "charts": _dedupe(charts),
             "tools": used,
-            "follow_ups": follow_ups(self.ref, question),
+            "follow_ups": follow_ups(
+                self.ref, [t["content"] for t in history if t.get("role") == "user"] + [question]
+            ),
             "model": llm.describe()["model"],
         }
 
@@ -608,15 +616,16 @@ def ask(
     ref: SessionRef, question: str, history: list[dict[str, str]] | None = None
 ) -> dict[str, Any]:
     question = " ".join(question.split())[:MAX_QUESTION]
+    asked = [t["content"] for t in history or [] if t.get("role") == "user"]
     if llm.configured():
         try:
             return ModelAnalyst(ref).answer(question, history or [])
         except llm.LLMError as exc:
             log.warning("Falling back to the rule-based analyst: %s", exc)
-            out = RuleAnalyst(ref).answer(question)
+            out = RuleAnalyst(ref).answer(question, asked)
             out["notice"] = "The language model was unavailable, so the built-in analyst answered."
             return out
-    return RuleAnalyst(ref).answer(question)
+    return RuleAnalyst(ref).answer(question, asked)
 
 
 __all__ = ["ask", "follow_ups", "RuleAnalyst", "ModelAnalyst", "Result"]

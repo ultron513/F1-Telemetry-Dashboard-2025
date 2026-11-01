@@ -12,6 +12,7 @@ import {
   ServerCog,
   Route,
   Settings,
+  Sparkles,
   Swords,
   Timer,
   Trophy,
@@ -31,6 +32,7 @@ export const NAV: { section: string; items: NavItem[] }[] = [
     section: "Session",
     items: [
       { href: "/", label: "Overview", icon: Gauge, description: "Result, highlights and the season so far" },
+      { href: "/ask", label: "Ask the pit wall", icon: Sparkles, description: "Ask questions in plain English, answered from the data" },
       { href: "/live", label: "Live", icon: Radio, description: "Live timing, pit windows and win chances" },
       { href: "/telemetry", label: "Telemetry", icon: Activity, description: "Speed, throttle, brake, gear and delta traces" },
       { href: "/laps", label: "Lap analysis", icon: Timer, description: "Timing screen, stints and pace distribution" },

@@ -91,3 +91,24 @@ test("status page reports health and accepts jobs", async ({ page }) => {
   await expect(page.getByText("All systems operational")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Endpoints" })).toBeVisible();
 });
+
+test("overview carries an automatic session report", async ({ page }) => {
+  await open(page, "/");
+  await settled(page);
+  const report = page.locator("section", { hasText: "Session report" }).first();
+  await expect(report.getByText(/Max Verstappen holds on/)).toBeVisible({ timeout: 60_000 });
+  await expect(report.getByText("ANT takes the lead from VER")).toBeVisible();
+});
+
+test("ask the pit wall answers with evidence and follow-ups", async ({ page }) => {
+  await open(page, "/ask");
+  await settled(page);
+  await page.getByLabel("Your question").fill("Why did Norris finish behind Verstappen?");
+  await page.getByLabel("Your question").press("Enter");
+  await expect(page.getByText("VER finished P1, NOR P2.")).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByText(/Verdict:/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: /The gap, lap by lap · VER vs NOR/ })).toBeVisible();
+  // A suggested follow-up asks the next question in one click.
+  await page.getByRole("button", { name: /tyre strategies compare/ }).click();
+  await expect(page.getByText(/Strategies:/)).toBeVisible({ timeout: 60_000 });
+});

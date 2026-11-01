@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { Tyre } from "@/components/f1/bits";
+import { SessionReport } from "@/components/ai/report";
 import { Classification } from "@/components/session/classification";
 import { SessionHero } from "@/components/session/hero";
 import { ChampionshipSnapshot, SeasonCalendar } from "@/components/session/season";
@@ -28,6 +29,8 @@ function Overview() {
   return (
     <div className="space-y-5">
       <SessionHero summary={summary} />
+
+      <SessionReport />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         <Panel title="Classification" subtitle="Select a driver to retheme the dashboard around them" flush bodyClassName="px-3 pb-3 sm:px-4">
