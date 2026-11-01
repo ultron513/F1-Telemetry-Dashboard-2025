@@ -106,7 +106,11 @@ class ArchiveSource:
     def start(self) -> float:
         """Session clock when the session goes green ("Started"), else the first message."""
         for e in self.events:
-            if e.topic == "SessionStatus" and isinstance(e.data, dict) and e.data.get("Status") == "Started":
+            if (
+                e.topic == "SessionStatus"
+                and isinstance(e.data, dict)
+                and e.data.get("Status") == "Started"
+            ):
                 return e.t
         return self.events[0].t if self.events else 0.0
 
