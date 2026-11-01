@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pitwall-client"
+version = "0.1.0"
+description = "Python client for the Pit Wall F1 telemetry & strategy API"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Asish Kumar Patra" }]
+keywords = ["formula1", "f1", "telemetry", "fastf1", "motorsport"]
+dependencies = ["httpx>=0.27"]
+
+[project.optional-dependencies]
+live = ["websockets>=12"]
+pandas = ["pandas>=2.0"]
+dev = ["pytest>=8", "ruff"]
+
+[project.urls]
+Homepage = "https://github.com/ultron513/F1-Telemetry-Dashboard-2025"
+
+[tool.hatch.build.targets.wheel]
+packages = ["pitwall_client"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]
