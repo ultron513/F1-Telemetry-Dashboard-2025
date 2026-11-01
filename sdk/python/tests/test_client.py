@@ -71,3 +71,18 @@ def test_validation_errors_and_post():
     }
     with pytest.raises(ApiError, match="greater than"):
         pw.get("/x")
+
+
+def test_ai_methods():
+    seen = []
+
+    def handler(req: httpx.Request) -> httpx.Response:
+        seen.append((req.method, req.url.path, dict(req.url.params), req.content))
+        return httpx.Response(200, json={"answer": "ok"})
+
+    race = make(handler).session(2025, 3, "R")
+    race.report(narrate=False)
+    assert race.ask("Who won?")["answer"] == "ok"
+    assert seen[0][:3] == ("GET", "/api/v1/sessions/2025/3/R/report", {"narrate": "false"})
+    assert seen[1][:2] == ("POST", "/api/v1/sessions/2025/3/R/ask")
+    assert json.loads(seen[1][3]) == {"question": "Who won?", "history": []}

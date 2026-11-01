@@ -25,6 +25,7 @@ A typed Python client lives in [`sdk/python`](../sdk/python).
 - [Live](#live) (1)
 - [History](#history) (5)
 - [Operations](#operations) (4)
+- [AI](#ai) (4)
 
 ## Meta
 
@@ -380,6 +381,38 @@ One background job.
 ### `GET /api/v1/status`
 
 Service status for the public status page.
+
+## AI
+
+### `GET /api/v1/ai/status`
+
+Is a language model configured?.
+
+Returns: `AIStatus`
+
+### `POST /api/v1/sessions/{season}/{round}/{session}/ask`
+
+Ask the pit wall a question about this session.
+
+Body: `AskRequest` (JSON)
+
+Returns: `AskResponse`
+
+### `GET /api/v1/sessions/{season}/{round}/{session}/ask/suggestions`
+
+Starter questions for this session.
+
+Returns: `SuggestionsResponse`
+
+### `GET /api/v1/sessions/{season}/{round}/{session}/report`
+
+Automatic session report (headline, key moments, strategy, pace).
+
+| Parameter | In | Type | Required | Description |
+| --- | --- | --- | --- | --- |
+| `narrate` | query | `boolean` | no | Let the language model rewrite the prose, if one is configured (default `True`) |
+
+Returns: `ReportResponse`
 
 ## WebSocket: live timing
 

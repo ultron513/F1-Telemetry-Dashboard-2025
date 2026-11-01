@@ -103,6 +103,27 @@ class Settings:
         default_factory=lambda: os.getenv("PITWALL_ADMIN_TOKEN") or None
     )
 
+    # AI layer. Without a key, reports use templates and questions go to the
+    # rule-based analyst. "anthropic" or "openai" (any OpenAI-compatible API:
+    # OpenAI, Llama API, Groq, Together, a local Ollama, ...).
+    llm_provider: str | None = field(
+        default_factory=lambda: (os.getenv("PITWALL_LLM_PROVIDER") or "").lower() or None
+    )
+    llm_api_key: str | None = field(
+        default_factory=lambda: (
+            os.getenv("PITWALL_LLM_API_KEY")
+            or os.getenv("ANTHROPIC_API_KEY")
+            or os.getenv("OPENAI_API_KEY")
+            or None
+        )
+    )
+    llm_model: str | None = field(default_factory=lambda: os.getenv("PITWALL_LLM_MODEL") or None)
+    llm_base_url: str | None = field(
+        default_factory=lambda: (os.getenv("PITWALL_LLM_BASE_URL") or "").rstrip("/") or None
+    )
+    llm_timeout: float = field(default_factory=lambda: float(_env_int("PITWALL_LLM_TIMEOUT", 60)))
+    llm_max_steps: int = field(default_factory=lambda: _env_int("PITWALL_LLM_MAX_STEPS", 6))
+
     # Payload caches for derived (already-serialised) results.
     payload_cache_size: int = field(default_factory=lambda: _env_int("F1_PAYLOAD_CACHE_SIZE", 512))
     payload_cache_ttl: int = field(

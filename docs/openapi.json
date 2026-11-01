@@ -1,6 +1,168 @@
 {
   "components": {
     "schemas": {
+      "AIStatus": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "fallback": {
+            "default": "rules",
+            "title": "Fallback",
+            "type": "string"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "AIStatus",
+        "type": "object"
+      },
+      "AskRequest": {
+        "properties": {
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/ChatTurn"
+            },
+            "maxItems": 12,
+            "title": "History",
+            "type": "array"
+          },
+          "question": {
+            "maxLength": 500,
+            "minLength": 2,
+            "title": "Question",
+            "type": "string"
+          }
+        },
+        "required": [
+          "question"
+        ],
+        "title": "AskRequest",
+        "type": "object"
+      },
+      "AskResponse": {
+        "properties": {
+          "answer": {
+            "title": "Answer",
+            "type": "string"
+          },
+          "charts": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Charts",
+            "type": "array"
+          },
+          "follow_ups": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Follow Ups",
+            "type": "array"
+          },
+          "intent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intent"
+          },
+          "mode": {
+            "enum": [
+              "rules",
+              "llm"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "notice": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notice"
+          },
+          "question": {
+            "title": "Question",
+            "type": "string"
+          },
+          "round": {
+            "title": "Round",
+            "type": "integer"
+          },
+          "season": {
+            "title": "Season",
+            "type": "integer"
+          },
+          "session": {
+            "$ref": "#/components/schemas/SessionInfo"
+          },
+          "tools": {
+            "items": {
+              "$ref": "#/components/schemas/ToolUse"
+            },
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "season",
+          "round",
+          "session",
+          "question",
+          "mode",
+          "answer",
+          "charts",
+          "tools",
+          "follow_ups"
+        ],
+        "title": "AskResponse",
+        "type": "object"
+      },
       "BattleRound": {
         "properties": {
           "pace_gap": {
@@ -596,6 +758,29 @@
           "y"
         ],
         "title": "Channels",
+        "type": "object"
+      },
+      "ChatTurn": {
+        "properties": {
+          "content": {
+            "maxLength": 4000,
+            "title": "Content",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "ChatTurn",
         "type": "object"
       },
       "CircuitHistoryResponse": {
@@ -4483,6 +4668,152 @@
         "title": "ReplayStint",
         "type": "object"
       },
+      "ReportMoment": {
+        "properties": {
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "lap": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lap"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "text"
+        ],
+        "title": "ReportMoment",
+        "type": "object"
+      },
+      "ReportResponse": {
+        "properties": {
+          "event": {
+            "title": "Event",
+            "type": "string"
+          },
+          "headline": {
+            "title": "Headline",
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "template",
+              "llm"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "moments": {
+            "items": {
+              "$ref": "#/components/schemas/ReportMoment"
+            },
+            "title": "Moments",
+            "type": "array"
+          },
+          "round": {
+            "title": "Round",
+            "type": "integer"
+          },
+          "season": {
+            "title": "Season",
+            "type": "integer"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/ReportSection"
+            },
+            "title": "Sections",
+            "type": "array"
+          },
+          "session": {
+            "$ref": "#/components/schemas/SessionInfo"
+          },
+          "standfirst": {
+            "title": "Standfirst",
+            "type": "string"
+          },
+          "stats": {
+            "items": {
+              "$ref": "#/components/schemas/ReportStat"
+            },
+            "title": "Stats",
+            "type": "array"
+          }
+        },
+        "required": [
+          "season",
+          "round",
+          "session",
+          "event",
+          "mode",
+          "headline",
+          "standfirst",
+          "sections",
+          "moments",
+          "stats"
+        ],
+        "title": "ReportResponse",
+        "type": "object"
+      },
+      "ReportSection": {
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "body"
+        ],
+        "title": "ReportSection",
+        "type": "object"
+      },
+      "ReportStat": {
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "value"
+        ],
+        "title": "ReportStat",
+        "type": "object"
+      },
       "ResultRow": {
         "properties": {
           "best_lap": {
@@ -5720,6 +6051,42 @@
         "title": "StyleResponse",
         "type": "object"
       },
+      "SuggestionsResponse": {
+        "properties": {
+          "assistant": {
+            "additionalProperties": true,
+            "title": "Assistant",
+            "type": "object"
+          },
+          "round": {
+            "title": "Round",
+            "type": "integer"
+          },
+          "season": {
+            "title": "Season",
+            "type": "integer"
+          },
+          "session": {
+            "$ref": "#/components/schemas/SessionInfo"
+          },
+          "suggestions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Suggestions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "season",
+          "round",
+          "session",
+          "suggestions",
+          "assistant"
+        ],
+        "title": "SuggestionsResponse",
+        "type": "object"
+      },
       "TeamCar": {
         "properties": {
           "corner_index": {
@@ -6245,6 +6612,25 @@
           "titles"
         ],
         "title": "TitleCount",
+        "type": "object"
+      },
+      "ToolUse": {
+        "properties": {
+          "args": {
+            "additionalProperties": true,
+            "title": "Args",
+            "type": "object"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "args"
+        ],
+        "title": "ToolUse",
         "type": "object"
       },
       "TracePoint": {
@@ -7182,6 +7568,27 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/ai/status": {
+      "get": {
+        "operationId": "status_api_v1_ai_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AIStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Is a language model configured?",
+        "tags": [
+          "AI"
+        ]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "health_api_v1_health_get",
@@ -8089,6 +8496,158 @@
         "summary": "Analysis Tyre Management",
         "tags": [
           "Analysis"
+        ]
+      }
+    },
+    "/api/v1/sessions/{season}/{round}/{session}/ask": {
+      "post": {
+        "operationId": "ask_api_v1_sessions__season___round___session__ask_post",
+        "parameters": [
+          {
+            "description": "Championship year",
+            "in": "path",
+            "name": "season",
+            "required": true,
+            "schema": {
+              "description": "Championship year",
+              "maximum": 2100,
+              "minimum": 2018,
+              "title": "Season",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Round number in the calendar",
+            "in": "path",
+            "name": "round",
+            "required": true,
+            "schema": {
+              "description": "Round number in the calendar",
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Round",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "FastF1 session identifier (FP1, FP2, FP3, Q, SQ, SS, S, R)",
+            "in": "path",
+            "name": "session",
+            "required": true,
+            "schema": {
+              "description": "FastF1 session identifier (FP1, FP2, FP3, Q, SQ, SS, S, R)",
+              "pattern": "^(?i:FP1|FP2|FP3|Q|SQ|SS|S|R)$",
+              "title": "Session",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AskRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AskResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ask the pit wall a question about this session",
+        "tags": [
+          "AI"
+        ]
+      }
+    },
+    "/api/v1/sessions/{season}/{round}/{session}/ask/suggestions": {
+      "get": {
+        "operationId": "suggestions_api_v1_sessions__season___round___session__ask_suggestions_get",
+        "parameters": [
+          {
+            "description": "Championship year",
+            "in": "path",
+            "name": "season",
+            "required": true,
+            "schema": {
+              "description": "Championship year",
+              "maximum": 2100,
+              "minimum": 2018,
+              "title": "Season",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Round number in the calendar",
+            "in": "path",
+            "name": "round",
+            "required": true,
+            "schema": {
+              "description": "Round number in the calendar",
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Round",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "FastF1 session identifier (FP1, FP2, FP3, Q, SQ, SS, S, R)",
+            "in": "path",
+            "name": "session",
+            "required": true,
+            "schema": {
+              "description": "FastF1 session identifier (FP1, FP2, FP3, Q, SQ, SS, S, R)",
+              "pattern": "^(?i:FP1|FP2|FP3|Q|SQ|SS|S|R)$",
+              "title": "Session",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuggestionsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Starter questions for this session",
+        "tags": [
+          "AI"
         ]
       }
     },
@@ -9156,6 +9715,89 @@
         "summary": "One car's dashboard channels on the replay clock",
         "tags": [
           "Replay"
+        ]
+      }
+    },
+    "/api/v1/sessions/{season}/{round}/{session}/report": {
+      "get": {
+        "operationId": "session_report_api_v1_sessions__season___round___session__report_get",
+        "parameters": [
+          {
+            "description": "Championship year",
+            "in": "path",
+            "name": "season",
+            "required": true,
+            "schema": {
+              "description": "Championship year",
+              "maximum": 2100,
+              "minimum": 2018,
+              "title": "Season",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Round number in the calendar",
+            "in": "path",
+            "name": "round",
+            "required": true,
+            "schema": {
+              "description": "Round number in the calendar",
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Round",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "FastF1 session identifier (FP1, FP2, FP3, Q, SQ, SS, S, R)",
+            "in": "path",
+            "name": "session",
+            "required": true,
+            "schema": {
+              "description": "FastF1 session identifier (FP1, FP2, FP3, Q, SQ, SS, S, R)",
+              "pattern": "^(?i:FP1|FP2|FP3|Q|SQ|SS|S|R)$",
+              "title": "Session",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Let the language model rewrite the prose, if one is configured",
+            "in": "query",
+            "name": "narrate",
+            "required": false,
+            "schema": {
+              "default": true,
+              "description": "Let the language model rewrite the prose, if one is configured",
+              "title": "Narrate",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Automatic session report (headline, key moments, strategy, pace)",
+        "tags": [
+          "AI"
         ]
       }
     },

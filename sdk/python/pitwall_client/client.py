@@ -163,6 +163,18 @@ class SessionClient:
     def onboard(self, driver: str, step: float = 0.5) -> dict[str, Any]:
         return self._get("replay/onboard", driver=driver, step=step)
 
+    # AI
+    def report(self, narrate: bool = True) -> dict[str, Any]:
+        """Automatic session report: headline, key moments, strategy and pace."""
+        return self._get("report", narrate=str(narrate).lower())
+
+    def ask(self, question: str, history: list[dict[str, str]] | None = None) -> dict[str, Any]:
+        """Ask the pit wall a question; the answer comes with the charts that back it."""
+        return self._pw.post(
+            f"/sessions/{self.season}/{self.round}/{self.code}/ask",
+            {"question": question, "history": history or []},
+        )
+
     def laps_frame(self, driver: str):
         """The driver's lap table as a pandas DataFrame (``pip install pitwall-client[pandas]``)."""
         import pandas as pd
