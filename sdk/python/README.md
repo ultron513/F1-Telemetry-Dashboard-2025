@@ -23,6 +23,9 @@ with PitWall("http://localhost:8000") as pw:
     print("Best plan:", best["plan"], best["delta"])
 
     print(pw.career("hamilton")["totals"]["wins"])
+
+    print(race.report()["headline"])
+    print(race.ask("Why did Norris finish behind Verstappen?")["answer"])
 ```
 
 Live timing (or any past race replayed as live):
