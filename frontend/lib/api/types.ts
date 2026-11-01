@@ -863,3 +863,84 @@ export interface OnboardResponse extends SessionContext {
   drs: number[];
   max_rpm: number;
 }
+
+// --- History ---------------------------------------------------------------------
+
+export interface ChampionsResponse {
+  seasons: {
+    season: number;
+    rounds: number;
+    decided: boolean;
+    driver: { id: string; name: string; nationality: string | null; points: number; wins: number; team: string | null };
+    constructor: { id: string; name: string; points: number; wins: number } | null;
+  }[];
+  most_driver_titles: { name: string; titles: number }[];
+  most_constructor_titles: { name: string; titles: number }[];
+}
+
+export interface HistoryDriver {
+  id: string;
+  name: string;
+  code: string | null;
+  number: string | null;
+  nationality: string | null;
+  born: string | null;
+  wiki?: string | null;
+}
+
+export interface CareerResponse {
+  driver: HistoryDriver;
+  totals: {
+    starts: number;
+    wins: number;
+    podiums: number;
+    poles: number;
+    fastest_laps: number;
+    points: number;
+    dnfs: number;
+    titles: number;
+    title_years: number[];
+    best_finish: number | null;
+    win_rate: number;
+    podium_rate: number;
+  };
+  first_race: { season: number; name: string } | null;
+  last_race: { season: number; name: string } | null;
+  teams: { team: string; from: number; to: number }[];
+  seasons: { season: number; races: number; wins: number; podiums: number; poles: number; points: number; teams: string[]; championship: number | null }[];
+}
+
+export interface HistoryCircuit {
+  id: string;
+  name: string;
+  locality: string | null;
+  country: string | null;
+  lat?: number | null;
+  long?: number | null;
+  wiki?: string | null;
+}
+
+export interface CircuitHistoryResponse {
+  circuit: HistoryCircuit;
+  races: number;
+  first: number | null;
+  last: number | null;
+  wins_from_pole: number;
+  pole_win_rate: number | null;
+  most_wins: { name: string; wins: number }[];
+  most_team_wins: { name: string; wins: number }[];
+  pole_record: { season: number; driver: string; team: string; time: number | null } | null;
+  pole_times: { season: number; driver: string; team: string; time: number | null }[];
+  results: {
+    season: number;
+    round: number;
+    race: string;
+    winner: string;
+    winner_id: string;
+    team: string;
+    grid: number | null;
+    pole: string | null;
+    pole_time: number | null;
+    fastest_lap: number | null;
+  }[];
+}

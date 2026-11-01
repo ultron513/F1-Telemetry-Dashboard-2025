@@ -80,6 +80,11 @@ class Settings:
         ).rstrip("/")
     )
     http_timeout: float = 12.0
+    history_cache_dir: Path = field(
+        default_factory=lambda: Path(
+            os.getenv("F1_HISTORY_CACHE_DIR", str(PROJECT_ROOT / "cache" / "jolpica"))
+        )
+    )
 
     # Parquet warehouse for season-wide analytics (DuckDB).
     warehouse_dir: Path = field(

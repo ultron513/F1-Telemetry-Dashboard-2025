@@ -6,6 +6,7 @@ import {
   Flag,
   FlaskConical,
   Gauge,
+  History,
   Layers,
   Radio,
   Route,
@@ -46,6 +47,7 @@ export const NAV: { section: string; items: NavItem[] }[] = [
     items: [
       { href: "/standings", label: "Standings", icon: Trophy, description: "Championship tables and points progression" },
       { href: "/teammates", label: "Team-mates", icon: UserRoundCheck, description: "Season head-to-heads within each team" },
+      { href: "/history", label: "History", icon: History, description: "Champions, careers and circuits since 1950" },
       { href: "/drivers", label: "Drivers", icon: Users, description: "The grid for this session" },
     ],
   },

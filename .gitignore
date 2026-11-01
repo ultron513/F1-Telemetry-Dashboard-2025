@@ -29,3 +29,4 @@ Thumbs.db
 .transfer_src.tar
 _to_delete/
 data/warehouse/
+cache/jolpica/

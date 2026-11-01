@@ -41,13 +41,13 @@ export function Panel({
       {...rest}
     >
       {(title || actions || share) && (
-        <header className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 px-4 pt-3.5 pb-2.5 sm:px-5">
-          <div className="min-w-0">
+        <header className={cn("flex items-start justify-between gap-x-4 gap-y-2 px-4 pt-3.5 pb-2.5 sm:px-5", share && !actions ? "flex-nowrap" : "flex-wrap")}>
+          <div className={cn("min-w-0", share && !actions && "flex-1")}>
             {title && <h2 className="text-[15px] leading-tight font-semibold text-ink">{title}</h2>}
             {subtitle && <p className="mt-0.5 text-[13px] text-ink-3">{subtitle}</p>}
           </div>
           {(actions || share) && (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="ml-auto flex flex-wrap items-center gap-2">
               {actions}
               {share && <ShareButton target={body} title={shareTitle} />}
             </div>

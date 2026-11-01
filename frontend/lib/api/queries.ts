@@ -4,6 +4,11 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { apiGet } from "./client";
 import type {
+  CareerResponse,
+  ChampionsResponse,
+  CircuitHistoryResponse,
+  HistoryCircuit,
+  HistoryDriver,
   Circuit3DResponse,
   OnboardResponse,
   CarsResponse,
@@ -216,3 +221,50 @@ export const useCircuit3D = (k: SessionKey | null, enabled: boolean) =>
 
 export const useOnboard = (k: SessionKey | null, driver: string | null) =>
   useSessionQuery<OnboardResponse>(k, "replay/onboard", { driver: driver ?? undefined, step: 0.5 }, !!driver);
+
+// --- History ---------------------------------------------------------------------
+
+const DAY = 24 * HOUR;
+
+export function useChampions() {
+  return useQuery({
+    queryKey: ["history", "champions"],
+    queryFn: ({ signal }) => apiGet<ChampionsResponse>("/history/champions", undefined, signal),
+    staleTime: DAY,
+  });
+}
+
+export function useHistoryDrivers(search: string) {
+  return useQuery({
+    queryKey: ["history", "drivers", search],
+    queryFn: ({ signal }) => apiGet<{ drivers: HistoryDriver[] }>("/history/drivers", { search }, signal),
+    staleTime: DAY,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useCareer(id: string | null) {
+  return useQuery({
+    queryKey: ["history", "driver", id],
+    queryFn: ({ signal }) => apiGet<CareerResponse>(`/history/drivers/${id}`, undefined, signal),
+    enabled: !!id,
+    staleTime: DAY,
+  });
+}
+
+export function useHistoryCircuits() {
+  return useQuery({
+    queryKey: ["history", "circuits"],
+    queryFn: ({ signal }) => apiGet<{ circuits: HistoryCircuit[] }>("/history/circuits", undefined, signal),
+    staleTime: DAY,
+  });
+}
+
+export function useCircuitHistory(id: string | null) {
+  return useQuery({
+    queryKey: ["history", "circuit", id],
+    queryFn: ({ signal }) => apiGet<CircuitHistoryResponse>(`/history/circuits/${id}`, undefined, signal),
+    enabled: !!id,
+    staleTime: DAY,
+  });
+}
