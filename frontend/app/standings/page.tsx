@@ -84,7 +84,7 @@ function Body({ d }: { d: StandingsResponse }) {
           The standings service couldn&rsquo;t be reached, so these tables are rebuilt from cached sessions only (rounds {d.rounds_included.join(", ")}).
         </p>
       )}
-      <Panel
+      <Panel share
         accent
         title="Points progression"
         subtitle={view === "drivers" ? "Top ten drivers; teammates share a colour, the second is dashed" : "Top ten constructors"}

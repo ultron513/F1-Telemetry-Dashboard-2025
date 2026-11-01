@@ -50,7 +50,7 @@ function Strategy() {
       />
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
-        <Panel accent title="Tyre strategy" subtitle="New sets are solid, used sets hatched. Select a row to focus that driver." flush bodyClassName="px-2 pb-3">
+        <Panel share accent title="Tyre strategy" subtitle="New sets are solid, used sets hatched. Select a row to focus that driver." flush bodyClassName="px-2 pb-3">
           <QueryView query={strategy}>
             {(s) => <StrategyGantt data={s} lapStatus={trace.data?.lap_status} focus={driver} onSelect={(c) => set({ driver: c })} />}
           </QueryView>
@@ -141,7 +141,7 @@ function DegradationPanel() {
   const deg = useDegradation(key, driver);
   const [corrected, setCorrected] = useState(true);
   return (
-    <Panel
+    <Panel share
       title="Tyre degradation"
       subtitle={`${driver ?? ""} lap time against tyre age, per stint`}
       actions={
@@ -253,7 +253,7 @@ function RaceTracePanel() {
   const [view, setView] = useState<"position" | "gap">("position");
   const highlight = useMemo(() => new Set([driver, vs].filter(Boolean) as string[]), [driver, vs]);
   return (
-    <Panel
+    <Panel share
       title="Race trace"
       subtitle={view === "position" ? "Running order at the end of every lap; focus and comparison drivers highlighted" : "Seconds behind the leader at the end of every lap"}
       actions={

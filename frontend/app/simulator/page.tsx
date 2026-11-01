@@ -118,7 +118,7 @@ function Workbench({ model, rival, onRival }: { model: SimulatorModelResponse; r
             />
           </div>
         </Panel>
-        <Panel title="Outcome" subtitle="Hindsight replays the real race's safety cars; Monte Carlo draws hundreds of random races.">
+        <Panel share title="Outcome" subtitle="Hindsight replays the real race's safety cars; Monte Carlo draws hundreds of random races.">
           {!valid ? (
             <Empty>The stints cover {total} of {laps} laps.</Empty>
           ) : (
@@ -404,7 +404,7 @@ function ModelPanel({ model }: { model: SimulatorModelResponse }) {
     [model.compounds],
   );
   return (
-    <Panel title="Tyre model" subtitle={`Lap-time cost vs a new ${compound(model.reference).label.toLowerCase()}, by tyre age. Dashed lines are not fitted from this race.`}>
+    <Panel share title="Tyre model" subtitle={`Lap-time cost vs a new ${compound(model.reference).label.toLowerCase()}, by tyre age. Dashed lines are not fitted from this race.`}>
       <div className="mb-3 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Stat label="Pit loss" value={model.pit_loss?.toFixed(1) ?? "—"} unit="s" sub={model.pit_loss_source} />
         <Stat label="Fuel effect" value={model.fuel_effect != null ? (model.fuel_effect * 1000).toFixed(0) : "—"} unit="ms/lap" sub="Lighter car, faster lap" />
@@ -448,7 +448,7 @@ function Undercut({ model, rival, onRival }: { model: SimulatorModelResponse; ri
   const maxLap = model.total_laps - 6;
 
   return (
-    <Panel
+    <Panel share
       title="Undercut / overcut calculator"
       subtitle={`Should ${driver} pit before or after a rival? Projects both cars four laps past the second stop.`}
       actions={

@@ -160,7 +160,7 @@ function Telemetry() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_400px]">
-        <Panel
+        <Panel share
           accent
           title={vs ? "Overlay" : "Lap trace"}
           subtitle={hover != null ? `${Math.round(hover)} m into the lap` : "Hover for values · drag to zoom · double-click to reset"}
@@ -187,7 +187,7 @@ function Telemetry() {
         </Panel>
 
         <div className="space-y-4">
-          <Panel
+          <Panel share
             title="On track"
             actions={
               <Segmented
@@ -371,7 +371,7 @@ function CornerTable({ a, b, unit, colorA, colorB }: { a?: TelemetryResponse; b?
   if (!a) return null;
   const bMap = new Map((b?.corners ?? []).map((c) => [`${c.number}${c.letter}`, c]));
   return (
-    <Panel title="Corner minimum speeds" subtitle={b ? "Apex speed and gear, with the difference" : "Apex speed and gear"} flush bodyClassName="px-3 pb-3">
+    <Panel share title="Corner minimum speeds" subtitle={b ? "Apex speed and gear, with the difference" : "Apex speed and gear"} flush bodyClassName="px-3 pb-3">
       {a.corners.length === 0 ? (
         <Empty>No corner data for this circuit.</Empty>
       ) : (

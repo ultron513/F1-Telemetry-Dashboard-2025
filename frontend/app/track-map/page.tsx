@@ -65,7 +65,7 @@ function TrackMapView() {
       </div>
 
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
-        <Panel
+        <Panel share
           accent
           title={event?.location ?? "Circuit"}
           subtitle={c ? `${(c.length / 1000).toFixed(3)} km · ${c.corners.length} corners${c.corner_source === "detected" ? " (detected from speed)" : ""}` : undefined}

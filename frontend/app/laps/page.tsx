@@ -198,7 +198,7 @@ function Laps() {
         )}
       </QueryView>
 
-      <Panel title="Field pace" subtitle="Clean green-flag laps for every driver. Boxes hold the middle half of their laps; the bar inside is the median." className="mt-4">
+      <Panel share title="Field pace" subtitle="Clean green-flag laps for every driver. Boxes hold the middle half of their laps; the bar inside is the median." className="mt-4">
         <QueryView query={pace}>{(p) => <PaceBoxPlot drivers={p.drivers} focus={driver} />}</QueryView>
       </Panel>
     </>

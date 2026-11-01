@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { BattleView } from "@/components/charts/battle";
 import { RatingRadar } from "@/components/charts/misc-charts";
 import { TeamStripe } from "@/components/f1/bits";
 import { DriverAvatar } from "@/components/f1/driver-avatar";
@@ -9,7 +10,7 @@ import { PageHeader, SessionGate } from "@/components/shell/page";
 import { DriverPicker } from "@/components/shell/pickers";
 import { Panel } from "@/components/ui/panel";
 import { Empty, QueryView } from "@/components/ui/primitives";
-import { useCompare, useRatings } from "@/lib/api/queries";
+import { useCompare, useRaceTrace, useRatings, useStrategy } from "@/lib/api/queries";
 import type { DriverInfo, RatingsResponse, TelemetryStats } from "@/lib/api/types";
 import { lapTime, sectorTime, speed, speedUnitLabel } from "@/lib/format";
 import { teamColor } from "@/lib/teams";
@@ -45,8 +46,11 @@ function rawFormat(key: string, v: number | null | undefined): string {
 }
 
 function HeadToHead() {
-  const { key, driver, vs, set, focus, rival, queryString } = useSelection();
+  const { key, driver, vs, set, focus, rival, queryString, summary } = useSelection();
   const ratings = useRatings(key);
+  const isRace = summary?.session.kind === "race";
+  const trace = useRaceTrace(isRace ? key : null);
+  const strategy = useStrategy(isRace ? key : null);
   const colorA = teamColor(focus?.team, focus?.team_color);
   const sameTeam = rival?.team === focus?.team;
   const colorB = rival ? (sameTeam ? "var(--teammate)" : teamColor(rival.team, rival.team_color)) : "#888";
@@ -74,6 +78,13 @@ function HeadToHead() {
             <div className="space-y-4">
               <Matchup r={r} a={focus} b={rival} colorA={colorA} colorB={colorB} dashedB={sameTeam} />
               <LapDuel colorA={colorA} colorB={colorB} />
+              {summary?.session.kind === "race" && driver && vs && (
+                <Panel share="Battle" title={`Battle · ${driver} vs ${vs}`} subtitle="The gap between them at the line, every lap, with pit stops and DRS range.">
+                  <QueryView query={trace}>
+                    {(t) => <BattleView trace={t} strategy={strategy.data} a={driver} b={vs} colorA={colorA} colorB={sameTeam ? "var(--teammate)" : colorB} />}
+                  </QueryView>
+                </Panel>
+              )}
             </div>
             <Leaderboard r={r} />
           </div>
@@ -89,7 +100,7 @@ function Matchup({ r, a, b, colorA, colorB, dashedB }: { r: RatingsResponse; a: 
   const metrics = r.metrics.filter((m) => m.weight > 0);
   if (!a || !ra) return <Empty>Select a driver.</Empty>;
   return (
-    <Panel accent title="Ratings" subtitle="Scored 60–99 against everyone in this session; weights depend on the session type">
+    <Panel share accent title="Ratings" subtitle="Scored 60–99 against everyone in this session; weights depend on the session type">
       <div className="grid items-center gap-6 md:grid-cols-[1fr_minmax(0,300px)_1fr]">
         <Side d={a} rating={ra.overall} rank={ra.rank} color={colorA} />
         <RatingRadar
@@ -150,7 +161,7 @@ function LapDuel({ colorA, colorB }: { colorA: string; colorB: string }) {
   const cmp = useCompare(key, driver, "fastest", vs, "fastest");
   if (!vs) return null;
   return (
-    <Panel title="Best lap against best lap">
+    <Panel share title="Best lap against best lap">
       <QueryView query={cmp}>
         {(c) => {
           const rows: { label: string; a: string; b: string; better: "a" | "b" | null }[] = [

@@ -213,3 +213,22 @@ def analysis_cars(ref: Ref) -> dict:
 @router.get("/analysis/tyre-management", response_model=TyreManagementResponse, tags=["Analysis"])
 def analysis_tyre_management(ref: Ref) -> dict:
     return payloads.tyre_management(ref)
+
+
+# --- Visualisation -------------------------------------------------------------
+
+
+@router.get("/circuit/3d", tags=["Circuit"], summary="Track outline with elevation (metres)")
+def circuit_3d(ref: Ref) -> dict:
+    return payloads.circuit_3d(ref)
+
+
+@router.get(
+    "/replay/onboard", tags=["Replay"], summary="One car's dashboard channels on the replay clock"
+)
+def replay_onboard(
+    ref: Ref,
+    driver: Driver,
+    step: Annotated[float, Query(ge=0.25, le=2.0)] = 0.5,
+) -> dict:
+    return payloads.onboard(ref, norm_driver(driver), round(step, 2))

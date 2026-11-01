@@ -64,3 +64,22 @@ def test_warehouse_teammates(client, race_base):
     assert mclaren["pace_gap"] is not None
     empty = client.get("/api/v1/seasons/2019/teammates")
     assert empty.status_code == 404
+
+
+def test_circuit_elevation(client, race_base):
+    body = client.get(f"{race_base}/circuit/3d").json()
+    assert len(body["x"]) == len(body["y"]) == len(body["z"]) == len(body["distance"]) > 100
+    assert 5 < body["elevation_range"] < 120  # Suzuka: about 40 m
+    assert body["distance"] == sorted(body["distance"])
+
+
+def test_onboard_channels(client, race_base):
+    body = client.get(f"{race_base}/replay/onboard", params={"driver": "VER"}).json()
+    n = body["frames"]
+    for ch in ("speed", "rpm", "throttle", "brake", "gear", "drs"):
+        assert len(body[ch]) == n
+    assert 280 < max(body["speed"]) < 360
+    assert set(body["brake"]) <= {0, 1} and set(body["drs"]) <= {0, 1}
+    assert max(body["gear"]) == 8
+    replay = client.get(f"{race_base}/replay").json()
+    assert body["start"] == replay["start"]

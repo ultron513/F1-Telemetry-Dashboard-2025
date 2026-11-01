@@ -304,7 +304,7 @@ function Tower({ snap, focus, onFocus }: { snap: LiveSnapshot; focus: string | n
 function Probabilities({ snap }: { snap: LiveSnapshot }) {
   const rows = snap.probabilities.filter((p) => p.podium >= 0.005).slice(0, 8);
   return (
-    <Panel title="Race outcome" subtitle={`Win and podium chances with ${snap.laps_left} laps to go, from recent pace, stops still owed and safety-car risk.`}>
+    <Panel share title="Race outcome" subtitle={`Win and podium chances with ${snap.laps_left} laps to go, from recent pace, stops still owed and safety-car risk.`}>
       {rows.length === 0 ? (
         <Empty>Waiting for gaps.</Empty>
       ) : (

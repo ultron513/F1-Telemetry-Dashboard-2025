@@ -836,3 +836,30 @@ export interface TeammateBattleResponse {
   pairs: TeammatePair[];
   ingested: { season: number; round: number; session: string }[];
 }
+
+// --- Visualisation ---------------------------------------------------------------
+
+export interface Circuit3DResponse extends SessionContext {
+  length: number;
+  x: number[];
+  y: number[];
+  z: number[];
+  distance: number[];
+  elevation_range: number;
+  lowest: number;
+  highest: number;
+}
+
+export interface OnboardResponse extends SessionContext {
+  driver: DriverInfo;
+  start: number;
+  step: number;
+  frames: number;
+  speed: number[];
+  rpm: number[];
+  throttle: number[];
+  brake: number[];
+  gear: number[];
+  drs: number[];
+  max_rpm: number;
+}

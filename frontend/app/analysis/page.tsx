@@ -73,7 +73,7 @@ function StyleSection({ data }: { data: StyleResponse }) {
 
   return (
     <div className="grid gap-4 xl:grid-cols-[420px_minmax(0,1fr)]">
-      <Panel accent title="Driving style" subtitle={`Percentile against the field's ${data.field_size} fastest laps (100 = best on that axis).`}>
+      <Panel share accent title="Driving style" subtitle={`Percentile against the field's ${data.field_size} fastest laps (100 = best on that axis).`}>
         <RatingRadar
           floor={0}
           axes={data.axes.map((ax) => ({ key: ax.key, label: ax.label.replace("-corner speed", " corners") }))}
@@ -172,7 +172,7 @@ function IdealLap({ data }: { data: IdealLapResponse }) {
   const max = Math.max(0.05, ...data.minisectors.map((m) => Math.abs(m.loss ?? 0)));
   const color = teamColor(data.driver.team, data.driver.team_color);
   return (
-    <Panel
+    <Panel share
       title={`Ideal lap · ${data.driver.code}`}
       subtitle={`Best sector times stitched together, across ${data.laps_used.length} quick laps. Bars show where lap ${data.fastest_lap.lap} lost (up) or found (down) time.`}
     >
@@ -237,7 +237,7 @@ function Cars({ data }: { data: CarsResponse }) {
     points: [{ x: t.speed_trap ?? 0, y: t.corner_index ?? 0, meta: t.profile }],
   }));
   return (
-    <Panel title="What each car is built for" subtitle="Speed trap vs cornering speed, from each team's quickest lap. Top right is fast everywhere.">
+    <Panel share title="What each car is built for" subtitle="Speed trap vs cornering speed, from each team's quickest lap. Top right is fast everywhere.">
       <LineChart
         ariaLabel="Straight-line speed against cornering speed by team"
         series={series}

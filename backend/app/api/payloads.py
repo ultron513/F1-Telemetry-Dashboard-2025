@@ -210,3 +210,16 @@ def tyre_management(ref: SessionRef) -> dict[str, Any]:
             "Tyre management is rated on race stints.", hint="Choose the Race session."
         )
     return {**_ctx(ref), **analysis_svc.tyre_management(store.get(ref))}
+
+
+# --- Visualisation -------------------------------------------------------------
+
+
+@memoize(SIZE, TTL)
+def circuit_3d(ref: SessionRef) -> dict[str, Any]:
+    return {**_ctx(ref), **circuit_svc.elevation(store.get(ref))}
+
+
+@memoize(SIZE, TTL)
+def onboard(ref: SessionRef, driver: str, step: float) -> dict[str, Any]:
+    return {**_ctx(ref), **replay_svc.onboard(store.get(ref), driver, step)}

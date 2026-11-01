@@ -4,6 +4,8 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { apiGet } from "./client";
 import type {
+  Circuit3DResponse,
+  OnboardResponse,
   CarsResponse,
   IdealLapResponse,
   StyleResponse,
@@ -206,3 +208,11 @@ export function useTeammates(season: number | null) {
     retry: 0,
   });
 }
+
+// --- Visualisation ---------------------------------------------------------------
+
+export const useCircuit3D = (k: SessionKey | null, enabled: boolean) =>
+  useSessionQuery<Circuit3DResponse>(k, "circuit/3d", undefined, enabled);
+
+export const useOnboard = (k: SessionKey | null, driver: string | null) =>
+  useSessionQuery<OnboardResponse>(k, "replay/onboard", { driver: driver ?? undefined, step: 0.5 }, !!driver);

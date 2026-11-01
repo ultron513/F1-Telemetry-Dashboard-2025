@@ -177,3 +177,44 @@ def circuit(session: Session) -> dict[str, Any]:
         "sectors": _sector_distances(lap, trace),
         "drs_zones": _drs_zones(session, total),
     }
+
+
+def elevation(session: Session) -> dict[str, Any]:
+    """Track outline in 3D (x, y, z in metres) from the reference lap's position data."""
+    lap = reference_lap(session)
+    trace = lap_trace(lap)
+    pos = lap.get_pos_data()
+    if pos is None or "Z" not in pos or pos["Z"].isna().all():
+        raise common_not_found("No elevation data for this circuit.")
+    car = lap.get_car_data()
+    t_car = car["SessionTime"].dt.total_seconds().to_numpy()
+    t_pos = pos["SessionTime"].dt.total_seconds().to_numpy()
+    z_raw = np.interp(t_car, t_pos, pos["Z"].to_numpy(dtype=float))
+    # lap_trace sorted/deduplicated by distance; rebuild z on the same index.
+    dist_car = car.add_distance()["Distance"].to_numpy(dtype=float)
+    order = np.argsort(dist_car)
+    z = np.interp(trace["distance"].to_numpy(), dist_car[order], z_raw[order])
+    # Position data is in 1/10 m; smooth the 4 Hz steps.
+    kernel = np.ones(9) / 9
+    z = np.convolve(np.pad(z, 4, mode="edge"), kernel, mode="valid")
+    stride = max(1, len(trace) // 900)
+    sl = slice(None, None, stride)
+    x = trace["x"].to_numpy()[sl] / 10
+    y = trace["y"].to_numpy()[sl] / 10
+    zz = z[sl] / 10
+    return {
+        "length": round(float(trace["distance"].iloc[-1]), 1),
+        "x": np.round(x, 2).tolist(),
+        "y": np.round(y, 2).tolist(),
+        "z": np.round(zz, 2).tolist(),
+        "distance": np.round(trace["distance"].to_numpy()[sl], 1).tolist(),
+        "elevation_range": round(float(zz.max() - zz.min()), 1),
+        "lowest": round(float(zz.min()), 2),
+        "highest": round(float(zz.max()), 2),
+    }
+
+
+def common_not_found(message: str) -> Exception:
+    from app.core.errors import NotFoundError
+
+    return NotFoundError(message)

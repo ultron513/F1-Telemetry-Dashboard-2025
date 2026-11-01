@@ -70,7 +70,7 @@ function WeatherBody({ w }: { w: WeatherResponse }) {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <Panel
+        <Panel share
           accent
           title="Temperatures"
           subtitle={`Track ${trackDelta >= 0 ? "warmed" : "cooled"} by ${Math.abs(prefs.tempUnit === "f" ? trackDelta * 1.8 : trackDelta).toFixed(1)}${tu} from start to finish`}
@@ -95,7 +95,7 @@ function WeatherBody({ w }: { w: WeatherResponse }) {
             ariaLabel="Track and air temperature over the session"
           />
         </Panel>
-        <Panel title="Wind direction" subtitle="Share of samples by direction; darker = stronger">
+        <Panel share title="Wind direction" subtitle="Share of samples by direction; darker = stronger">
           <WindRose data={w.wind_rose} color={theme.primary} />
         </Panel>
       </div>

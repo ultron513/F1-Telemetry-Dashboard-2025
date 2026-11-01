@@ -1,13 +1,16 @@
 "use client";
 
 import { Pause, Play, RotateCcw, SkipForward } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { TrackMap, type TrackCar } from "@/components/charts/track-map";
 import { FlagChip, TrackStatusPill, Tyre } from "@/components/f1/bits";
+import { OnboardHud } from "@/components/replay/onboard-hud";
 import { Panel } from "@/components/ui/panel";
 import { Button, ErrorState, Loading, Segmented } from "@/components/ui/primitives";
-import { useCircuit, useRaceControl, useReplay } from "@/lib/api/queries";
+import { ShareButton } from "@/components/ui/share-button";
+import { useCircuit, useCircuit3D, useOnboard, useRaceControl, useReplay } from "@/lib/api/queries";
 import type { RaceControlMessage, ReplayResponse } from "@/lib/api/types";
 import { SEVERITY_RANK, TRACK_STATUS } from "@/lib/f1";
 import { clock } from "@/lib/format";
@@ -35,6 +38,12 @@ interface CarState {
 }
 
 /** Live-timing style session replay: cars on the map, timing tower and race-control alerts. */
+// WebGL only runs in the browser.
+const Track3D = dynamic(() => import("@/components/charts/track-3d").then((m) => m.Track3D), {
+  ssr: false,
+  loading: () => <Loading label="Building the 3D circuit…" className="h-[480px]" />,
+});
+
 export function SessionReplay() {
   const { key } = useSelection();
   const replay = useReplay(key);
@@ -57,8 +66,12 @@ function Player({
   messages: RaceControlMessage[];
   trackStatus: { status: string; start: number | null; end: number | null }[];
 }) {
-  const { driver, vs, set, summary } = useSelection();
+  const { driver, vs, set, summary, key } = useSelection();
   const { prefs } = usePreferences();
+  const [view, setView] = useState<"2d" | "3d">("2d");
+  const mapRef = useRef<HTMLDivElement>(null);
+  const track3d = useCircuit3D(key, view === "3d");
+  const onboard = useOnboard(key, driver);
   const [t, setT] = useState(data.start);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(10);
@@ -216,11 +229,39 @@ function Player({
               </span>
               <TrackStatusPill status={status} />
             </div>
-            <span className="tnum text-sm text-ink-3">Session clock {clock(t)}</span>
+            <span className="flex items-center gap-3">
+              <Segmented
+                size="sm"
+                label="Map view"
+                value={view}
+                onChange={setView}
+                options={[
+                  { value: "2d", label: "2D" },
+                  { value: "3d", label: "3D", title: "Real elevation, exaggerated ×4 · drag to orbit" },
+                ]}
+              />
+              <span className="tnum text-sm text-ink-3">Session clock {clock(t)}</span>
+              <ShareButton target={mapRef} title="Race replay" />
+            </span>
           </div>
           <div
+            ref={mapRef}
             className={cn("relative transition-shadow", status === "5" && "shadow-[inset_0_0_0_3px_#E5132B]", (status === "4" || status === "6") && "shadow-[inset_0_0_0_3px_#F59E0B]")}
           >
+            {view === "3d" ? (
+              track3d.data ? (
+                <Track3D
+                  track={track3d.data}
+                  height={480}
+                  ariaLabel={`3D replay at lap ${lap}; ${track3d.data.elevation_range} m of elevation change`}
+                  cars={mapCars.map((c) => ({ code: c.code, color: c.color, frac: c.frac, highlight: c.highlight, dim: c.dim }))}
+                />
+              ) : track3d.error ? (
+                <ErrorState error={track3d.error} className="h-[480px]" />
+              ) : (
+                <Loading label="Building the 3D circuit…" className="h-[480px]" />
+              )
+            ) : (
             <TrackMap
               outline={outline.outline}
               rotation={outline.rotation}
@@ -231,6 +272,7 @@ function Player({
               height={480}
               ariaLabel={`Replay at lap ${lap}`}
             />
+            )}
           </div>
           <div className="space-y-3 border-t border-line px-4 py-3">
             <div className="relative">
@@ -285,6 +327,10 @@ function Player({
             </div>
           </div>
         </Panel>
+
+        {driver && onboard.data && (
+          <OnboardHud data={onboard.data} t={t} color={styles.get(onboard.data.driver.code)?.color ?? "var(--team-primary)"} />
+        )}
 
         <Panel title="Race control" subtitle="Messages up to this point in the replay">
           {recent.length === 0 ? (

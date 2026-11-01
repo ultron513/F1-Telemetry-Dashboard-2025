@@ -138,3 +138,37 @@ def replay(session: Session, step: float = 1.0) -> dict[str, Any]:
         "progress_scale": 1000,
         "drivers": out_drivers,
     }
+
+
+def onboard(session: Session, code: str, step: float = 0.5) -> dict[str, Any]:
+    """One car's dashboard channels on the replay clock (for the onboard HUD)."""
+    info = common.require_driver(session, code)
+    laps = session.laps.dropna(subset=["LapNumber"])
+    t_start = float(laps["LapStartTime"].dropna().min().total_seconds())
+    t_end = float(laps["Time"].dropna().max().total_seconds())
+    car = (getattr(session, "car_data", {}) or {}).get(info["number"])
+    if car is None or car.empty:
+        raise common.NotFoundError(f"No car data for {code} in this session.")
+    t = car["SessionTime"].dt.total_seconds().to_numpy()
+    frames = np.arange(t_start, t_end + step, step)
+    idx = np.clip(np.searchsorted(t, frames), 0, len(t) - 1)
+
+    def cont(col: str) -> list[int]:
+        return np.round(np.interp(frames, t, car[col].to_numpy(dtype=float))).astype(int).tolist()
+
+    def disc(col: str) -> list[int]:
+        return car[col].to_numpy()[idx].astype(int).tolist()
+
+    return {
+        "driver": info,
+        "start": round(t_start, 1),
+        "step": step,
+        "frames": int(len(frames)),
+        "speed": cont("Speed"),
+        "rpm": cont("RPM"),
+        "throttle": np.clip(cont("Throttle"), 0, 100).tolist(),
+        "brake": [int(bool(v)) for v in car["Brake"].to_numpy()[idx]],
+        "gear": disc("nGear"),
+        "drs": [1 if v >= 10 else 0 for v in car["DRS"].to_numpy()[idx]],
+        "max_rpm": int(car["RPM"].max()),
+    }
